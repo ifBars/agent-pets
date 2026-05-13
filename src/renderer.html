@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agent Pets</title>
+    <link rel="stylesheet" href="./renderer.css" />
+  </head>
+  <body>
+    <main id="app">
+      <section class="pet-stage" aria-label="Desktop pet">
+        <div id="pet" class="codex-avatar-root" aria-hidden="true"></div>
+      </section>
+
+      <section class="status-panel" aria-label="Agent activity">
+        <div class="status-row">
+          <div>
+            <p class="eyebrow">Codex monitor</p>
+            <h1 id="activeTitle">Scanning local sessions</h1>
+          </div>
+          <span id="statusPill" class="status-pill">Idle</span>
+        </div>
+        <p id="activeDetail" class="detail">Local-only, read-only status from your Codex session files.</p>
+        <ol id="sessionList" class="session-list" aria-label="Recent Codex sessions"></ol>
+      </section>
+
+      <section class="controls">
+        <select id="petSelect" aria-label="Pet"></select>
+        <select id="stateSelect" aria-label="Animation state">
+          <option value="auto">Auto</option>
+          <option value="idle">Idle</option>
+          <option value="running">Running</option>
+          <option value="running-right">Running right</option>
+          <option value="running-left">Running left</option>
+          <option value="waving">Waving</option>
+          <option value="jumping">Jumping</option>
+          <option value="waiting">Waiting</option>
+          <option value="review">Review</option>
+          <option value="failed">Failed</option>
+        </select>
+        <input id="statusFileInput" type="text" aria-label="Status file path" placeholder="Optional status file path" />
+      </section>
+    </main>
+    <script src="./renderer.js"></script>
+  </body>
+</html>

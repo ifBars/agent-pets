@@ -1,0 +1,42 @@
+{
+  "generatedAt": "2026-05-13T10:47:38.737Z",
+  "project": "agent-pets",
+  "version": "0.1.0",
+  "artifacts": [
+    {
+      "path": "dist/Agent Pets Setup 0.1.0.exe",
+      "size": 95689239,
+      "sha256": "6d9617572e69411c93b41b0e6b9c29ccc87832bcd71da51ab5db6ec68a8cf2ec"
+    },
+    {
+      "path": "dist/Agent Pets 0.1.0.exe",
+      "size": 95480620,
+      "sha256": "c188197445efcb165e23f1d4f6c45e92eab55a0bbb3cb7ed7e49401bda47552f"
+    },
+    {
+      "path": "dist/Agent Pets-0.1.0.AppImage",
+      "size": 115328793,
+      "sha256": "91130850cec7ff81d410cec95a01b78791a51b839d7fe0f0e5ff8a4181207d04"
+    },
+    {
+      "path": "dist/agent-pets_0.1.0_amd64.deb",
+      "size": 90178048,
+      "sha256": "90224038548dd9fe26690998cc822b0976772b63ef6c28bb42964bf31e88661f"
+    },
+    {
+      "path": "docs/demo/agent-pets-demo.mp4",
+      "size": 117504,
+      "sha256": "b0a8ccca8ec247f2f10e3aa0a10ac281eeb4e4f4c4accf1c9c42863c4fed6ef1"
+    },
+    {
+      "path": "docs/demo/agent-pets-demo.png",
+      "size": 57746,
+      "sha256": "779906feec7fc9aebea0a38b82a639d24e4769d8420afb7e058fa9af665f4f2e"
+    }
+  ],
+  "launchKit": {
+    "video": "agent-pets-demo.mp4",
+    "thumbnail": "agent-pets-thumbnail.png",
+    "copy": "x-launch-post.md"
+  }
+}

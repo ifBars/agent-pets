@@ -1,0 +1,205 @@
+:root {
+  color-scheme: dark;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+#app {
+  display: grid;
+  grid-template-rows: minmax(116px, 1fr) auto auto;
+  place-items: center;
+  gap: 10px;
+  padding: 14px;
+  box-sizing: border-box;
+}
+
+.pet-stage {
+  display: grid;
+  place-items: end center;
+  width: 100%;
+  height: 100%;
+  min-height: 116px;
+  -webkit-app-region: drag;
+}
+
+.codex-avatar-root {
+  aspect-ratio: 192 / 208;
+  width: min(44vw, 8.4rem);
+  image-rendering: pixelated;
+  background-repeat: no-repeat;
+  background-size: 800% 900%;
+  filter: drop-shadow(0 10px 14px rgb(0 0 0 / 0.32));
+}
+
+.status-panel,
+.controls {
+  width: min(100%, 410px);
+  box-sizing: border-box;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 8px;
+  background: rgb(15 16 18 / 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-app-region: no-drag;
+}
+
+.status-panel {
+  padding: 11px 12px 10px;
+}
+
+.status-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.eyebrow {
+  margin: 0 0 3px;
+  color: rgb(162 174 172);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  max-width: 280px;
+  color: white;
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 720;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail {
+  margin: 7px 0 0;
+  color: rgb(196 201 199);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.status-pill {
+  flex: 0 0 auto;
+  min-width: 58px;
+  padding: 5px 8px;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 999px;
+  color: rgb(229 236 232);
+  background: rgb(255 255 255 / 0.08);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.status-pill.running {
+  color: rgb(183 255 222);
+  border-color: rgb(75 224 157 / 0.5);
+  background: rgb(37 129 86 / 0.28);
+}
+
+.status-pill.waiting {
+  color: rgb(255 229 178);
+  border-color: rgb(245 175 73 / 0.48);
+  background: rgb(140 89 31 / 0.28);
+}
+
+.status-pill.failed {
+  color: rgb(255 200 200);
+  border-color: rgb(255 96 96 / 0.5);
+  background: rgb(150 45 45 / 0.28);
+}
+
+.status-pill.review {
+  color: rgb(201 224 255);
+  border-color: rgb(105 156 255 / 0.48);
+  background: rgb(48 85 153 / 0.28);
+}
+
+.session-list {
+  display: grid;
+  gap: 5px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.session-item {
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  min-height: 22px;
+  color: rgb(218 222 220);
+  font-size: 11px;
+}
+
+.session-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgb(118 125 123);
+}
+
+.session-dot.running {
+  background: rgb(75 224 157);
+}
+
+.session-dot.waiting {
+  background: rgb(245 175 73);
+}
+
+.session-dot.failed {
+  background: rgb(255 96 96);
+}
+
+.session-dot.review {
+  background: rgb(105 156 255);
+}
+
+.session-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-time {
+  color: rgb(146 153 151);
+  font-variant-numeric: tabular-nums;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px;
+}
+
+input,
+select {
+  min-width: 0;
+  height: 30px;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 6px;
+  background: rgb(32 34 35 / 0.96);
+  color: white;
+  font: inherit;
+  font-size: 12px;
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+
+input {
+  grid-column: 1 / -1;
+}

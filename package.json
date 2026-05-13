@@ -1,0 +1,116 @@
+{
+  "name": "agent-pets",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Local-first desktop pets that mirror Codex and agent activity.",
+  "main": "src/main.cjs",
+  "license": "MIT",
+  "homepage": "https://github.com/ifBars/agent-pets#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ifBars/agent-pets.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ifBars/agent-pets/issues"
+  },
+  "author": {
+    "name": "Agent Pets contributors",
+    "email": "agent-pets@example.com"
+  },
+  "bin": {
+    "agent-pets": "bin/agent-pets.cjs",
+    "agent-pets-emit": "bin/agent-pets-emit.cjs",
+    "agent-pets-validate": "bin/agent-pets-validate.cjs",
+    "pets": "bin/agent-pets.cjs"
+  },
+  "scripts": {
+    "pets": "electron .",
+    "list": "electron . -- --list",
+    "validate:pet": "node bin/agent-pets-validate.cjs",
+    "qa:pet": "electron scripts/generate-pet-qa.cjs",
+    "emit": "node bin/agent-pets-emit.cjs",
+    "demo:status": "node scripts/demo-status.cjs",
+    "demo:screenshot": "electron scripts/capture-demo-screenshot.cjs",
+    "demo:video": "electron scripts/capture-demo-video.cjs",
+    "launch:kit": "node scripts/prepare-launch-kit.cjs",
+    "release:verify": "node scripts/verify-release.cjs",
+    "test": "bun test",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "dev.agentpets.desktop",
+    "productName": "Agent Pets",
+    "copyright": "Copyright (c) 2026 Agent Pets contributors",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "bin/**/*",
+      "scripts/demo-status.cjs",
+      "scripts/generate-pet-qa.cjs",
+      "scripts/capture-demo-screenshot.cjs",
+      "scripts/capture-demo-video.cjs",
+      "scripts/prepare-launch-kit.cjs",
+      "scripts/verify-release.cjs",
+      "README.md",
+      "LICENSE",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Agent Pets"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.developer-tools",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility",
+      "synopsis": "Local-first desktop pets for agent status",
+      "description": "Agent Pets mirrors local AI coding-agent activity through Codex-compatible desktop pets.",
+      "maintainer": "Agent Pets contributors <agent-pets@example.com>"
+    }
+  },
+  "devDependencies": {
+    "electron": "^39.2.4",
+    "electron-builder": "^26.8.1"
+  }
+}

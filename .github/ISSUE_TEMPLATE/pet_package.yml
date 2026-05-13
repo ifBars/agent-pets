@@ -1,0 +1,36 @@
+name: Pet package issue
+description: Report a broken or suspicious Codex-compatible pet package.
+title: "[Pet]: "
+labels:
+  - pet-package
+body:
+  - type: input
+    id: pet-name
+    attributes:
+      label: Pet name
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validator output
+      description: Paste `bun run validate:pet -- <pet-folder>` output.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: qa
+    attributes:
+      label: QA notes
+      description: Attach or describe the contact sheet from `bun run qa:pet`.
+    validations:
+      required: true
+  - type: checkboxes
+    id: visual-checks
+    attributes:
+      label: Visual checks
+      options:
+        - label: No matte halos or chroma-key fringing.
+        - label: Unused cells look transparent.
+        - label: Rows preserve the same pet identity.
+        - label: No detached effects, UI, text, or scenery.

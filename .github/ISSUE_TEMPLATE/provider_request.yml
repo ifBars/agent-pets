@@ -1,0 +1,31 @@
+name: Provider request
+description: Request support for another agent or status source.
+title: "[Provider]: "
+labels:
+  - provider
+body:
+  - type: input
+    id: provider
+    attributes:
+      label: Agent or tool
+      placeholder: Claude Code, Aider, OpenCode, Goose, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: status-source
+    attributes:
+      label: Available status source
+      description: Describe files, logs, commands, APIs, or hooks Agent Pets could read.
+    validations:
+      required: true
+  - type: textarea
+    id: mapping
+    attributes:
+      label: State mapping
+      description: Map tool events to idle/running/waiting/failed/review.
+      value: |
+        idle:
+        running:
+        waiting:
+        failed:
+        review:
