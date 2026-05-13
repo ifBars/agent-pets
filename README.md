@@ -8,6 +8,8 @@ The first target is Codex Desktop: the app reads local Codex pet packages and lo
 
 ## Quick Start
 
+Download packaged builds from [GitHub Releases](https://github.com/ifBars/agent-pets/releases), or run from source:
+
 ```bash
 bun install
 bun run pets

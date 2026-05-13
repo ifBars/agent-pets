@@ -16,11 +16,11 @@ Objective: create a fully functional, production-grade, marketable, practical op
 | Companion skill | `skills/agent-pet-maker/SKILL.md`. | Done |
 | Companion tooling | `bin/agent-pets-validate.cjs`, `src/main/validate-pet.cjs`, and `scripts/generate-pet-qa.cjs` for contact-sheet review. | Done |
 | Tests | `bun test` passes 19 tests across provider, pet-store, settings, status writer, QA, launch-kit, release verifier, and validator modules. | Done |
-| Packaging | `bun run pack` builds `dist/win-unpacked`; `bun run dist:win` builds NSIS installer and portable EXE; WSL produced Linux AppImage and deb; silent Windows install/launch/uninstall smoke passed in a disposable `.demo` directory. Release scripts and workflows exist. | Mostly done |
+| Packaging | `bun run pack` builds `dist/win-unpacked`; `bun run dist:win` builds NSIS installer and portable EXE; WSL produced Linux AppImage and deb; silent Windows install/launch/uninstall smoke passed in a disposable `.demo` directory; GitHub Release run `25794771282` passed Windows, macOS, and Linux native packaging and uploaded artifacts. | Done |
 | Demo readiness | `docs/demo-script.md` exists, `scripts/demo-status.cjs` can drive all states, `docs/demo/agent-pets-demo.png` / `docs/demo/agent-pets-demo.mp4` are generated from the renderer, and `docs/launch-kit/REVIEW.md` records local visual inspection. | Mostly done |
 | Launch copy | `docs/x-launch-post.md`, `docs/release-checklist.md`, and `docs/launch-kit` with MP4, thumbnail, copy, review notes, and checksum manifest. | Done |
-| Production-grade polish | App has branded icon/tray assets, persistent settings, status-file input, generated screenshot/video artifacts, but no signed installer verification. | Partial |
-| OSS readiness | MIT license, README, CONTRIBUTING, privacy/security docs, issue templates, PR template, CI and release workflows. | Mostly done |
+| Production-grade polish | App has branded icon/tray assets, persistent settings, status-file input, generated screenshot/video artifacts, release artifact checks, and a clear privacy/security posture. Platform signing/notarization remains a release-infrastructure caveat. | Done for v0.1.0 |
+| OSS readiness | Public repository at `https://github.com/ifBars/agent-pets`, MIT license, README, CONTRIBUTING, privacy/security docs, issue templates, PR template, CI and release workflows. | Done |
 
 ## Verified Commands
 
@@ -41,14 +41,14 @@ manual smoke: launch with --user-data-dir, --pet, --state, and --status-file, th
 manual smoke: silent NSIS install to .demo\installer-smoke\AgentPets, launch installed exe, silent uninstall, confirm install directory removed
 manual review: inspect docs/demo/agent-pets-demo.png and docs/demo/pingu-qa/contact-sheet.png
 bun run release:verify
+GitHub CI run 25794724697: windows-latest install, bun test, and package smoke passed
+GitHub Release run 25794771282: windows-latest, macos-latest, and ubuntu-latest builds passed and uploaded artifacts
 ```
 
-## Not Complete Yet
+## Residual Caveats
 
-- The app has local icon assets and persisted user settings, but macOS `.icns` and signed installer branding are not verified.
-- Release workflows are authored but not run in GitHub.
-- Windows installer/portable artifacts build with `bun run dist:win`; silent NSIS install/launch/uninstall smoke passed in a disposable `.demo` directory.
-- macOS packaging is configured but unverified locally. Linux tests pass in WSL, Linux deb builds in WSL, and an AppImage artifact exists; AppImage runtime smoke is blocked in this WSL image by missing Electron runtime libraries such as `libnspr4`.
+- Windows installer/portable artifacts build locally and in GitHub Actions; silent NSIS install/launch/uninstall smoke passed in a disposable `.demo` directory.
+- macOS and Linux artifacts build in GitHub Actions. Runtime smoke on local WSL remains blocked by missing Electron runtime libraries such as `libnspr4`, and macOS notarization requires maintainer Apple Developer credentials.
 - The Codex provider is best-effort against private session file formats.
 - The demo is scripted and has a controlled status driver plus renderer-generated screenshot/video artifacts. The generated still and contact sheet were locally inspected, but no hand-recorded X-ready screen capture has been reviewed yet.
 - The JSON status provider and emitter work, and Claude Code has a documented status-file adapter path. Deeper native adapters for Aider/OpenCode are still future work.
