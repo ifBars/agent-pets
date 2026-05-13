@@ -28,20 +28,26 @@ const params = new URLSearchParams(location.search);
 const codexHome = params.get("codexHome") || "";
 const initialPetId = params.get("pet") || "";
 const initialState = params.get("state") || "auto";
+let provider = params.get("provider") || "codex";
 let currentState = initialState;
 let requestedState = "auto";
 let timer = null;
 let pets = [];
 let statusFile = params.get("statusFile") || "";
+let popoverOpen = false;
 
 const petElement = document.getElementById("pet");
+const threadBadge = document.getElementById("threadBadge");
+const threadPopover = document.getElementById("threadPopover");
 const petSelect = document.getElementById("petSelect");
 const stateSelect = document.getElementById("stateSelect");
+const providerSelect = document.getElementById("providerSelect");
 const statusFileInput = document.getElementById("statusFileInput");
 const activeTitle = document.getElementById("activeTitle");
 const activeDetail = document.getElementById("activeDetail");
 const statusPill = document.getElementById("statusPill");
 const sessionList = document.getElementById("sessionList");
+const sourceLabel = document.getElementById("sourceLabel");
 
 function rowFrames(rowIndex, frameCount, frameDurationMs, finalFrameDurationMs) {
   return Array.from({ length: frameCount }, (_value, columnIndex) => ({
@@ -103,22 +109,29 @@ function selectPet(petId) {
 }
 
 async function refreshActivity() {
-  const activity = await window.codexPets.readActivity({ codexHome, statusFile });
+  const activity = await window.codexPets.readActivity({ codexHome, statusFile, provider });
   renderActivity(activity);
   if (requestedState === "auto") setState(activity.petState || "idle");
 }
 
 function renderActivity(activity) {
   const active = activity.active;
-  activeTitle.textContent = active?.title || "No Codex sessions found";
+  const sessions = activity.sessions || [];
+  const activeCount = sessions.filter((session) => session.state && session.state !== "idle").length;
+  const badgeCount = activeCount || sessions.length || 0;
+  sourceLabel.textContent = `${labelForSource(activity.source)} monitor`;
+  threadBadge.textContent = String(Math.min(99, badgeCount));
+  threadBadge.className = `thread-badge ${activity.state || "idle"}`;
+  threadBadge.title = `${badgeCount} ${badgeCount === 1 ? "thread" : "threads"}`;
+  activeTitle.textContent = active?.title || `No ${labelForSource(activity.source)} sessions found`;
   activeDetail.textContent = active
     ? `${labelForState(active.state)} - ${active.latestEvent || "session activity"}`
-    : "Create or open a Codex thread and the pet will react here.";
+    : `Create or open a ${labelForSource(activity.source)} thread and the pet will react here.`;
   statusPill.textContent = labelForState(activity.state);
   statusPill.className = `status-pill ${activity.state || "idle"}`;
 
   sessionList.textContent = "";
-  for (const session of (activity.sessions || []).slice(0, 4)) {
+  for (const session of sessions.slice(0, 5)) {
     const item = document.createElement("li");
     item.className = "session-item";
 
@@ -138,6 +151,14 @@ function renderActivity(activity) {
 
     sessionList.append(item);
   }
+}
+
+function labelForSource(source) {
+  return {
+    codex: "Codex",
+    opencode: "OpenCode",
+    "json-status": "Status file",
+  }[source] || "Agent";
 }
 
 function labelForState(state) {
@@ -161,8 +182,14 @@ function relativeTime(value) {
 }
 
 async function boot() {
-  const settings = await window.codexPets.getSettings();
+  const settings = await window.codexPets.getSettings().catch(() => ({
+    selectedPetId: "",
+    selectedState: "auto",
+    provider: "codex",
+    statusFile: "",
+  }));
   statusFile = statusFile || settings.statusFile || "";
+  provider = provider || settings.provider || "codex";
   requestedState = initialState;
   pets = await window.codexPets.listPets(codexHome);
   petSelect.textContent = "";
@@ -174,20 +201,41 @@ async function boot() {
   }
   selectPet(initialPetId || settings.selectedPetId);
   statusFileInput.value = statusFile;
+  providerSelect.value = provider;
   stateSelect.value = requestedState;
+  updateProviderControls();
   setState(currentState);
   await refreshActivity();
   window.setInterval(() => refreshActivity().catch(console.error), 5000);
 }
 
+function setPopoverOpen(value) {
+  popoverOpen = value;
+  threadPopover.hidden = !popoverOpen;
+}
+
+function updateProviderControls() {
+  statusFileInput.hidden = provider !== "json-status";
+}
+
 petSelect.addEventListener("change", () => selectPet(petSelect.value));
 stateSelect.addEventListener("change", () => setRequestedState(stateSelect.value));
+providerSelect.addEventListener("change", () => {
+  provider = providerSelect.value;
+  updateProviderControls();
+  window.codexPets.updateSettings({ provider }).catch(console.error);
+  refreshActivity().catch(console.error);
+});
 statusFileInput.addEventListener("change", () => {
   statusFile = statusFileInput.value.trim();
   window.codexPets.updateSettings({ statusFile }).catch(console.error);
   refreshActivity().catch(console.error);
 });
 petElement.addEventListener("dblclick", () => setState("waving"));
+threadBadge.addEventListener("click", () => setPopoverOpen(!popoverOpen));
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") setPopoverOpen(false);
+});
 
 boot().catch((error) => {
   console.error(error);

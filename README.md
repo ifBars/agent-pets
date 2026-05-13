@@ -39,6 +39,12 @@ Use a generic status file for another agent:
 bun run pets -- --status-file C:\path\to\agent-status.json
 ```
 
+Monitor OpenCode through its CLI session list:
+
+```bash
+bun run pets -- --provider opencode
+```
+
 Emit a status update from another agent or task wrapper:
 
 ```bash
@@ -89,6 +95,7 @@ pets
 - Validates the Codex pet atlas contract before loading a pet: WebP or PNG, `1536x1872`, `8x9`, `192x208` cells.
 - Runs as a transparent, frameless, always-on-top Electron desktop pet.
 - Reads local Codex session metadata and recent rollout JSONL records.
+- Reads OpenCode session summaries through `opencode session list --format json`.
 - Reads a generic JSON status file for non-Codex agents.
 - Maps active Codex work into pet animation states.
 - Persists selected pet, state mode, status-file path, and window bounds.
@@ -184,5 +191,6 @@ Release and launch notes:
 
 - [docs/release-checklist.md](docs/release-checklist.md)
 - [docs/x-launch-post.md](docs/x-launch-post.md)
+- [docs/adapters/opencode.md](docs/adapters/opencode.md)
 - [PRIVACY.md](PRIVACY.md)
 - [SECURITY.md](SECURITY.md)

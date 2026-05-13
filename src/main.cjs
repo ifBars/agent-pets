@@ -6,7 +6,16 @@ const { validatePetPackage } = require("./main/validate-pet.cjs");
 const { readSettings, updateSettings } = require("./main/settings.cjs");
 
 function parseArgs(argv) {
-  const args = { pet: null, state: null, list: false, codexHome: null, statusFile: null, validatePet: null, userDataDir: null };
+  const args = {
+    pet: null,
+    state: null,
+    list: false,
+    codexHome: null,
+    statusFile: null,
+    provider: null,
+    validatePet: null,
+    userDataDir: null,
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--list") args.list = true;
@@ -20,6 +29,8 @@ function parseArgs(argv) {
     else if (arg.startsWith("--codex-home=")) args.codexHome = arg.slice("--codex-home=".length);
     else if (arg === "--status-file") args.statusFile = argv[++index] ?? null;
     else if (arg.startsWith("--status-file=")) args.statusFile = arg.slice("--status-file=".length);
+    else if (arg === "--provider") args.provider = argv[++index] ?? null;
+    else if (arg.startsWith("--provider=")) args.provider = arg.slice("--provider=".length);
     else if (arg === "--user-data-dir") args.userDataDir = argv[++index] ?? null;
     else if (arg.startsWith("--user-data-dir=")) args.userDataDir = arg.slice("--user-data-dir=".length);
   }
@@ -52,16 +63,17 @@ async function createWindow(args) {
   const effectiveSettings = await updateSettings(settingsPath, {
     selectedPetId: selected?.id || settings.selectedPetId,
     selectedState: args.state || settings.selectedState || "auto",
+    provider: args.provider || settings.provider || (args.statusFile ? "json-status" : "codex"),
     statusFile: args.statusFile || settings.statusFile || "",
   });
   const bounds = settings.windowBounds || {};
   const win = new BrowserWindow({
     x: bounds.x,
     y: bounds.y,
-    width: bounds.width || 460,
-    height: bounds.height || 470,
-    minWidth: 320,
-    minHeight: 300,
+    width: bounds.width || 360,
+    height: bounds.height || 320,
+    minWidth: 220,
+    minHeight: 220,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
@@ -84,6 +96,7 @@ async function createWindow(args) {
     query: {
       codexHome,
       statusFile: effectiveSettings.statusFile,
+      provider: effectiveSettings.provider,
       state: effectiveSettings.selectedState,
       pet: selected?.id || "",
     },

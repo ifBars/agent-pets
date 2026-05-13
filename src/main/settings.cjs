@@ -4,6 +4,7 @@ const path = require("node:path");
 const DEFAULT_SETTINGS = {
   selectedPetId: "",
   selectedState: "auto",
+  provider: "codex",
   statusFile: "",
   windowBounds: null,
 };
@@ -34,9 +35,15 @@ function normalizeSettings(value) {
   return {
     selectedPetId: cleanString(input.selectedPetId),
     selectedState: normalizeState(input.selectedState),
+    provider: normalizeProvider(input.provider),
     statusFile: cleanString(input.statusFile),
     windowBounds: normalizeBounds(input.windowBounds),
   };
+}
+
+function normalizeProvider(value) {
+  const valid = new Set(["codex", "opencode", "json-status"]);
+  return valid.has(value) ? value : "codex";
 }
 
 function normalizeState(value) {
@@ -52,8 +59,8 @@ function normalizeBounds(value) {
   return {
     x: finiteNumber(value.x),
     y: finiteNumber(value.y),
-    width: Math.max(320, width),
-    height: Math.max(300, height),
+    width: Math.max(220, width),
+    height: Math.max(220, height),
   };
 }
 
@@ -68,6 +75,7 @@ function cleanString(value) {
 module.exports = {
   DEFAULT_SETTINGS,
   normalizeSettings,
+  normalizeProvider,
   readSettings,
   updateSettings,
   writeSettings,

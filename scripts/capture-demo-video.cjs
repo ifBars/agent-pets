@@ -4,6 +4,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { readPets } = require("../src/main/pet-store.cjs");
 const { readActivity } = require("../src/main/activity.cjs");
+const { readSettings, updateSettings } = require("../src/main/settings.cjs");
 
 const STEPS = [
   { state: "idle", title: "Agent Pets", detail: "Ready on desktop", seconds: 2 },
@@ -21,6 +22,7 @@ async function main() {
   const tempDir = path.join(root, ".demo");
   const framesDir = path.join(tempDir, "frames");
   const statusFile = path.join(tempDir, "video-status.json");
+  const settingsPath = path.join(tempDir, "video-settings.json");
   const videoPath = path.join(demoDir, "agent-pets-demo.mp4");
 
   await fs.rm(framesDir, { recursive: true, force: true });
@@ -29,6 +31,8 @@ async function main() {
 
   ipcMain.handle("pets:list", async () => readPets(codexHome));
   ipcMain.handle("activity:read", async () => readActivity({ codexHome, statusFile }));
+  ipcMain.handle("settings:get", async () => readSettings(settingsPath));
+  ipcMain.handle("settings:update", async (_event, patch) => updateSettings(settingsPath, patch));
 
   const win = new BrowserWindow({
     width: 920,
@@ -48,6 +52,7 @@ async function main() {
     query: {
       codexHome,
       statusFile,
+      provider: "json-status",
       state: "idle",
     },
   });

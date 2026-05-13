@@ -10,15 +10,17 @@ describe("settings", () => {
     const settings = normalizeSettings({
       selectedPetId: " pingu ",
       selectedState: "thinking",
+      provider: "unknown",
       statusFile: " status.json ",
       windowBounds: { width: 100, height: 100 },
     });
 
     expect(settings.selectedPetId).toBe("pingu");
     expect(settings.selectedState).toBe("auto");
+    expect(settings.provider).toBe("codex");
     expect(settings.statusFile).toBe("status.json");
-    expect(settings.windowBounds.width).toBe(320);
-    expect(settings.windowBounds.height).toBe(300);
+    expect(settings.windowBounds.width).toBe(220);
+    expect(settings.windowBounds.height).toBe(220);
   });
 
   test("reads and updates settings file", async () => {
@@ -28,17 +30,19 @@ describe("settings", () => {
     const initial = await readSettings(settingsPath);
     expect(initial.selectedState).toBe("auto");
 
-    const updated = await updateSettings(settingsPath, { selectedState: "review", selectedPetId: "pingu" });
+    const updated = await updateSettings(settingsPath, { selectedState: "review", selectedPetId: "pingu", provider: "opencode" });
     expect(updated.selectedState).toBe("review");
     expect(updated.selectedPetId).toBe("pingu");
+    expect(updated.provider).toBe("opencode");
 
     const reread = await readSettings(settingsPath);
     expect(reread.selectedState).toBe("review");
   });
 
   test("parses isolated user data dir", () => {
-    const args = parseArgs(["--user-data-dir", ".demo/user-data", "--status-file=status.json"]);
+    const args = parseArgs(["--user-data-dir", ".demo/user-data", "--status-file=status.json", "--provider", "opencode"]);
     expect(args.userDataDir).toBe(".demo/user-data");
     expect(args.statusFile).toBe("status.json");
+    expect(args.provider).toBe("opencode");
   });
 });

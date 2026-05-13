@@ -3,6 +3,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { readPets } = require("../src/main/pet-store.cjs");
 const { readActivity } = require("../src/main/activity.cjs");
+const { readSettings, updateSettings } = require("../src/main/settings.cjs");
 
 async function main() {
   const root = path.resolve(__dirname, "..");
@@ -10,6 +11,7 @@ async function main() {
   const demoDir = path.join(root, "docs", "demo");
   const tempDir = path.join(root, ".demo");
   const statusFile = path.join(tempDir, "screenshot-status.json");
+  const settingsPath = path.join(tempDir, "screenshot-settings.json");
   const screenshotPath = path.join(demoDir, "agent-pets-demo.png");
 
   await fs.mkdir(demoDir, { recursive: true });
@@ -31,6 +33,8 @@ async function main() {
 
   ipcMain.handle("pets:list", async () => readPets(codexHome));
   ipcMain.handle("activity:read", async () => readActivity({ codexHome, statusFile }));
+  ipcMain.handle("settings:get", async () => readSettings(settingsPath));
+  ipcMain.handle("settings:update", async (_event, patch) => updateSettings(settingsPath, patch));
 
   const win = new BrowserWindow({
     width: 920,
@@ -50,6 +54,7 @@ async function main() {
     query: {
       codexHome,
       statusFile,
+      provider: "json-status",
       state: "review",
     },
   });

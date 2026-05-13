@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-13T10:47:38.737Z",
+  "generatedAt": "2026-05-13T23:13:54.113Z",
   "project": "agent-pets",
   "version": "0.1.0",
   "artifacts": [
@@ -25,13 +25,13 @@
     },
     {
       "path": "docs/demo/agent-pets-demo.mp4",
-      "size": 117504,
-      "sha256": "b0a8ccca8ec247f2f10e3aa0a10ac281eeb4e4f4c4accf1c9c42863c4fed6ef1"
+      "size": 55048,
+      "sha256": "f884de7b17fb1d8ee04e5c20369e57a3b66e209d433e2ae267057239d71fa176"
     },
     {
       "path": "docs/demo/agent-pets-demo.png",
-      "size": 57746,
-      "sha256": "779906feec7fc9aebea0a38b82a639d24e4769d8420afb7e058fa9af665f4f2e"
+      "size": 46441,
+      "sha256": "0b44ea442ba97b8f3a1e6ba343168b9fc1f924a2f4c1d156adf7f1b81d676ebb"
     }
   ],
   "launchKit": {

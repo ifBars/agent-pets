@@ -9,6 +9,7 @@ Electron main
   pet-store.cjs
   settings.cjs
   providers/codex.cjs
+  providers/opencode.cjs
   providers/json-status.cjs
   validate-pet.cjs
   IPC
@@ -60,6 +61,16 @@ Reads a user-provided status file for non-Codex agents:
 
 Valid states are `idle`, `running`, `waiting`, `failed`, and `review`.
 
+### `src/main/providers/opencode.cjs`
+
+Reads OpenCode sessions through the public CLI command:
+
+```bash
+opencode session list --format json --max-count 8
+```
+
+It normalizes session summaries into the shared activity model without reading private OpenCode storage files directly.
+
 ### `src/main/validate-pet.cjs`
 
 Validates local pet packages for agents and contributors. It checks manifest shape, path traversal, sprite image type, and exact atlas dimensions.
@@ -78,7 +89,11 @@ The renderer uses the Codex atlas contract:
 ```mermaid
 flowchart LR
   A["Codex session files"] --> B["Codex provider"]
+  F["OpenCode CLI"] --> G["OpenCode provider"]
+  H["JSON status file"] --> I["Status-file provider"]
   B --> C["activity state"]
+  G --> C
+  I --> C
   C --> D["pet state"]
   D --> E["renderer animation row"]
 ```
