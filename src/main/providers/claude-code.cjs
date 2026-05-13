@@ -27,7 +27,7 @@ function normalizeClaudeSession(file, records, now) {
   const updatedAt = cleanString(latest?.timestamp) || new Date(file.stat.mtimeMs).toISOString();
   const recentRecords = records.slice(-12);
   const error = recentRecords.some((record) => record.error || record.isApiErrorMessage);
-  const state = error ? "failed" : normalizeState(latest?.status || latest?.type, updatedAt, now);
+  const state = error ? "failed" : normalizeClaudeState(latest, updatedAt, now);
   const latestEvent = summarizeClaudeRecord(latest);
   return {
     id: sessionId,
@@ -58,7 +58,14 @@ function summarizeClaudeRecord(record) {
   return "Claude Code session activity";
 }
 
+function normalizeClaudeState(record, updatedAt, now) {
+  if (record?.type === "assistant") return normalizeState("completed", updatedAt, now);
+  if (record?.type === "user") return normalizeState("running", updatedAt, now);
+  return normalizeState(record?.status || record?.type, updatedAt, now);
+}
+
 module.exports = {
+  normalizeClaudeState,
   normalizeClaudeSession,
   readClaudeCodeActivity,
 };

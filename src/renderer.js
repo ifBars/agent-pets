@@ -37,6 +37,8 @@ let pets = [];
 let statusFile = params.get("statusFile") || "";
 let popoverOpen = false;
 let settingsOpen = false;
+let refreshInFlight = false;
+let refreshQueued = false;
 
 const petElement = document.getElementById("pet");
 const threadBadge = document.getElementById("threadBadge");
@@ -115,9 +117,22 @@ function selectPet(petId) {
 }
 
 async function refreshActivity() {
-  const activity = await window.codexPets.readActivity({ codexHome, statusFile, provider });
-  renderActivity(activity);
-  if (requestedState === "auto") setState(activity.petState || "idle");
+  if (refreshInFlight) {
+    refreshQueued = true;
+    return;
+  }
+  refreshInFlight = true;
+  try {
+    const activity = await window.codexPets.readActivity({ codexHome, statusFile, provider });
+    renderActivity(activity);
+    if (requestedState === "auto") setState(activity.petState || "idle");
+  } finally {
+    refreshInFlight = false;
+    if (refreshQueued) {
+      refreshQueued = false;
+      window.setTimeout(() => refreshActivity().catch(console.error), 0);
+    }
+  }
 }
 
 function renderActivity(activity) {
@@ -218,19 +233,21 @@ async function boot() {
   updateProviderControls();
   setState(requestedState === "auto" ? "idle" : requestedState);
   await refreshActivity();
-  window.setInterval(() => refreshActivity().catch(console.error), 5000);
+  window.setInterval(() => refreshActivity().catch(console.error), 1500);
 }
 
 function setPopoverOpen(value) {
   popoverOpen = value;
   if (popoverOpen) setSettingsOpen(false);
-  threadPopover.hidden = !popoverOpen;
+  threadPopover.classList.toggle("is-open", popoverOpen);
+  threadPopover.setAttribute("aria-hidden", String(!popoverOpen));
 }
 
 function setSettingsOpen(value) {
   settingsOpen = value;
   if (settingsOpen) setPopoverOpen(false);
-  settingsPopover.hidden = !settingsOpen;
+  settingsPopover.classList.toggle("is-open", settingsOpen);
+  settingsPopover.setAttribute("aria-hidden", String(!settingsOpen));
 }
 
 function applyPetSize(value) {
@@ -270,6 +287,10 @@ document.addEventListener("keydown", (event) => {
     setPopoverOpen(false);
     setSettingsOpen(false);
   }
+});
+window.addEventListener("focus", () => refreshActivity().catch(console.error));
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refreshActivity().catch(console.error);
 });
 
 boot().catch((error) => {

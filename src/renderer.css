@@ -112,12 +112,33 @@ body,
   background: rgb(14 15 16 / 0.88);
   box-shadow: 0 18px 44px rgb(0 0 0 / 0.36);
   backdrop-filter: blur(14px);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-7px) scale(0.985);
+  transform-origin: top right;
+  visibility: hidden;
+  transition:
+    opacity 150ms ease,
+    transform 190ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 190ms;
   -webkit-app-region: no-drag;
 }
 
 .settings-popover {
   width: min(276px, calc(100vw - 32px));
   right: 46px;
+}
+
+.thread-popover.is-open,
+.settings-popover.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  visibility: visible;
+  transition:
+    opacity 120ms ease,
+    transform 170ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s;
 }
 
 .status-row {
@@ -282,4 +303,12 @@ input[type="range"] {
 
 .path-row[hidden] {
   display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thread-popover,
+  .settings-popover {
+    transition: none;
+    transform: none;
+  }
 }

@@ -45,4 +45,19 @@ describe("codex activity provider", () => {
     expect(session.state).toBe("review");
     expect(mapActivityToPetState(session.state)).toBe("review");
   });
+
+  test("uses review immediately after a completed assistant message", () => {
+    const now = new Date("2026-05-13T10:00:00.000Z");
+    const session = classifySession(
+      { id: "s4", thread_name: "Fresh done", updated_at: "2026-05-13T09:59:58.000Z" },
+      "session.jsonl",
+      {
+        mtimeMs: now.getTime() - 2_000,
+        records: [{ payload: { type: "message", role: "assistant" } }],
+      },
+      now,
+    );
+
+    expect(session.state).toBe("review");
+  });
 });

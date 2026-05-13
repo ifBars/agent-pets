@@ -38,6 +38,7 @@ describe("claude code provider", () => {
     expect(activity.source).toBe("claude-code");
     expect(activity.sessions).toHaveLength(1);
     expect(activity.active.id).toBe("session-1");
+    expect(activity.active.state).toBe("review");
     expect(activity.active.latestEvent).toBe("assistant response");
     expect(JSON.stringify(activity)).not.toContain("private prompt");
     expect(JSON.stringify(activity)).not.toContain("private response");

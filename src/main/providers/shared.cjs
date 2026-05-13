@@ -36,6 +36,7 @@ function normalizeState(value, updatedAt, now = new Date()) {
   if (["error", "errored", "fail", "failed", "crashed"].includes(state)) return "failed";
   if (["busy", "active", "working", "running", "streaming"].includes(state)) return "running";
   if (["blocked", "needs-input", "waiting", "paused"].includes(state)) return "waiting";
+  if (["complete", "completed", "done", "finished", "success", "succeeded", "review"].includes(state)) return "review";
   const ageMs = now.getTime() - new Date(updatedAt).getTime();
   if (Number.isFinite(ageMs) && ageMs < 3 * 60 * 1000) return "running";
   if (Number.isFinite(ageMs) && ageMs < 30 * 60 * 1000) return "review";

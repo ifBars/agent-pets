@@ -92,7 +92,9 @@ function classifySession(entry, sessionPath, sample, now) {
   let state = "idle";
   if (failed) state = "failed";
   else if (requestedInput) state = "waiting";
-  else if (pendingToolCall || lastWriteAgeMs <= ACTIVE_WINDOW_MS) state = "running";
+  else if (pendingToolCall) state = "running";
+  else if (isReviewPayload(latestPayload) && lastWriteAgeMs <= REVIEW_WINDOW_MS) state = "review";
+  else if (lastWriteAgeMs <= ACTIVE_WINDOW_MS) state = "running";
   else if (lastWriteAgeMs <= REVIEW_WINDOW_MS) state = "review";
 
   return {
@@ -139,6 +141,14 @@ function summarizePayload(payload) {
   return null;
 }
 
+function isReviewPayload(payload) {
+  if (!payload || typeof payload !== "object") return false;
+  if (payload.type === "message") return true;
+  if (payload.type === "function_call_output") return true;
+  if (payload.type === "reasoning") return true;
+  return false;
+}
+
 function mapActivityToPetState(state) {
   if (state === "running") return "running";
   if (state === "waiting") return "waiting";
@@ -160,5 +170,6 @@ module.exports = {
   readSessionIndex,
   findSessionPath,
   classifySession,
+  isReviewPayload,
   mapActivityToPetState,
 };
