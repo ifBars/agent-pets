@@ -11,6 +11,7 @@
       <section class="pet-stage" aria-label="Desktop pet">
         <div id="pet" class="codex-avatar-root" aria-hidden="true"></div>
         <button id="threadBadge" class="thread-badge" type="button" aria-label="Show agent threads">0</button>
+        <button id="settingsButton" class="settings-button" type="button" aria-label="Open settings">...</button>
       </section>
 
       <section id="threadPopover" class="thread-popover" aria-label="Agent activity" hidden>
@@ -23,13 +24,25 @@
         </div>
         <p id="activeDetail" class="detail">Local-only, read-only status from your Codex session files.</p>
         <ol id="sessionList" class="session-list" aria-label="Recent agent sessions"></ol>
-        <div class="compact-controls">
+      </section>
+
+      <section id="settingsPopover" class="settings-popover" aria-label="Agent Pets settings" hidden>
+        <div class="menu-row">
+          <label for="providerSelect">Provider</label>
           <select id="providerSelect" aria-label="Provider">
             <option value="codex">Codex</option>
             <option value="opencode">OpenCode</option>
+            <option value="claude-code">Claude Code</option>
+            <option value="t3code">T3Code</option>
             <option value="json-status">Status file</option>
           </select>
+        </div>
+        <div class="menu-row">
+          <label for="petSelect">Pet</label>
           <select id="petSelect" aria-label="Pet"></select>
+        </div>
+        <div class="menu-row">
+          <label for="stateSelect">State</label>
           <select id="stateSelect" aria-label="Animation state">
             <option value="auto">Auto</option>
             <option value="idle">Idle</option>
@@ -42,6 +55,13 @@
             <option value="review">Review</option>
             <option value="failed">Failed</option>
           </select>
+        </div>
+        <div class="menu-row">
+          <label for="petSizeInput">Size</label>
+          <input id="petSizeInput" type="range" min="72" max="160" step="4" aria-label="Pet size" />
+        </div>
+        <div id="statusFileRow" class="menu-row path-row">
+          <label for="statusFileInput">File</label>
           <input id="statusFileInput" type="text" aria-label="Status file path" placeholder="Status file path" />
         </div>
       </section>

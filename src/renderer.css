@@ -19,20 +19,21 @@ body,
   place-items: center;
   padding: 12px;
   box-sizing: border-box;
+  --pet-size: 112px;
 }
 
 .pet-stage {
   position: relative;
   display: grid;
   place-items: center;
-  width: 168px;
-  height: 190px;
+  width: calc(var(--pet-size) + 44px);
+  height: calc(var(--pet-size) + 62px);
   -webkit-app-region: drag;
 }
 
 .codex-avatar-root {
   aspect-ratio: 192 / 208;
-  width: 128px;
+  width: var(--pet-size);
   image-rendering: pixelated;
   background-repeat: no-repeat;
   background-size: 800% 900%;
@@ -42,7 +43,7 @@ body,
 .thread-badge {
   position: absolute;
   right: 18px;
-  top: 18px;
+  top: 26px;
   display: grid;
   place-items: center;
   width: 24px;
@@ -52,6 +53,27 @@ body,
   color: white;
   background: rgb(34 118 255 / 0.94);
   box-shadow: 0 6px 18px rgb(0 0 0 / 0.32);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+.settings-button {
+  position: absolute;
+  right: 18px;
+  top: 55px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgb(255 255 255 / 0.52);
+  border-radius: 999px;
+  color: white;
+  background: rgb(22 24 25 / 0.78);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.28);
   font: inherit;
   font-size: 12px;
   font-weight: 800;
@@ -76,10 +98,11 @@ body,
   background: rgb(42 112 224 / 0.94);
 }
 
-.thread-popover {
+.thread-popover,
+.settings-popover {
   position: absolute;
   right: 16px;
-  bottom: 18px;
+  top: 14px;
   width: min(308px, calc(100vw - 32px));
   max-height: calc(100vh - 36px);
   padding: 10px;
@@ -90,6 +113,11 @@ body,
   box-shadow: 0 18px 44px rgb(0 0 0 / 0.36);
   backdrop-filter: blur(14px);
   -webkit-app-region: no-drag;
+}
+
+.settings-popover {
+  width: min(276px, calc(100vw - 32px));
+  right: 46px;
 }
 
 .status-row {
@@ -214,11 +242,23 @@ h1 {
   font-variant-numeric: tabular-nums;
 }
 
-.compact-controls {
+.menu-row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  margin-top: 9px;
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+
+.menu-row:last-child {
+  margin-bottom: 0;
+}
+
+.menu-row label {
+  color: rgb(170 180 177);
+  font-size: 10px;
+  font-weight: 760;
+  text-transform: uppercase;
 }
 
 input,
@@ -235,10 +275,11 @@ select {
   box-sizing: border-box;
 }
 
-input {
-  grid-column: 1 / -1;
+input[type="range"] {
+  padding: 0;
+  accent-color: rgb(88 145 255);
 }
 
-input[hidden] {
+.path-row[hidden] {
   display: none;
 }

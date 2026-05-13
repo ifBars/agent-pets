@@ -13,6 +13,7 @@ function parseArgs(argv) {
     codexHome: null,
     statusFile: null,
     provider: null,
+    petSize: null,
     validatePet: null,
     userDataDir: null,
   };
@@ -31,6 +32,8 @@ function parseArgs(argv) {
     else if (arg.startsWith("--status-file=")) args.statusFile = arg.slice("--status-file=".length);
     else if (arg === "--provider") args.provider = argv[++index] ?? null;
     else if (arg.startsWith("--provider=")) args.provider = arg.slice("--provider=".length);
+    else if (arg === "--pet-size") args.petSize = argv[++index] ?? null;
+    else if (arg.startsWith("--pet-size=")) args.petSize = arg.slice("--pet-size=".length);
     else if (arg === "--user-data-dir") args.userDataDir = argv[++index] ?? null;
     else if (arg.startsWith("--user-data-dir=")) args.userDataDir = arg.slice("--user-data-dir=".length);
   }
@@ -64,6 +67,7 @@ async function createWindow(args) {
     selectedPetId: selected?.id || settings.selectedPetId,
     selectedState: args.state || settings.selectedState || "auto",
     provider: args.provider || settings.provider || (args.statusFile ? "json-status" : "codex"),
+    petSize: args.petSize || settings.petSize,
     statusFile: args.statusFile || settings.statusFile || "",
   });
   const bounds = settings.windowBounds || {};
@@ -97,6 +101,7 @@ async function createWindow(args) {
       codexHome,
       statusFile: effectiveSettings.statusFile,
       provider: effectiveSettings.provider,
+      petSize: String(effectiveSettings.petSize),
       state: effectiveSettings.selectedState,
       pet: selected?.id || "",
     },

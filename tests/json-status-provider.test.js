@@ -33,4 +33,11 @@ describe("json status provider", () => {
     const activity = await readJsonStatusActivity(statusFile);
     expect(activity.state).toBe("idle");
   });
+
+  test("empty status file path returns idle configuration guidance", async () => {
+    const activity = await readJsonStatusActivity("", { now: new Date("2026-05-13T10:01:00.000Z") });
+    expect(activity.state).toBe("idle");
+    expect(activity.error).toBe("No status file configured");
+    expect(activity.statusFile).toBe("");
+  });
 });

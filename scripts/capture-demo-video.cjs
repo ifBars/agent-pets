@@ -30,7 +30,9 @@ async function main() {
   await fs.mkdir(demoDir, { recursive: true });
 
   ipcMain.handle("pets:list", async () => readPets(codexHome));
-  ipcMain.handle("activity:read", async () => readActivity({ codexHome, statusFile }));
+  ipcMain.handle("activity:read", async (_event, options = {}) =>
+    readActivity({ ...options, codexHome, statusFile: options.statusFile || statusFile }),
+  );
   ipcMain.handle("settings:get", async () => readSettings(settingsPath));
   ipcMain.handle("settings:update", async (_event, patch) => updateSettings(settingsPath, patch));
 

@@ -9,8 +9,11 @@ Electron main
   pet-store.cjs
   settings.cjs
   providers/codex.cjs
+  providers/claude-code.cjs
   providers/opencode.cjs
+  providers/t3code.cjs
   providers/json-status.cjs
+  providers/index.cjs
   validate-pet.cjs
   IPC
     pets:list
@@ -35,7 +38,7 @@ Reads local pet packages from the configured Codex home. It validates:
 
 ### `src/main/settings.cjs`
 
-Stores local app settings under Electron `userData`: selected pet, selected state mode, status-file path, and window bounds. Settings are local only and are not written into `.codex`.
+Stores local app settings under Electron `userData`: selected pet, selected state mode, provider, pet size, status-file path, and window bounds. Settings are local only and are not written into `.codex`.
 
 ### `src/main/providers/codex.cjs`
 
@@ -61,6 +64,10 @@ Reads a user-provided status file for non-Codex agents:
 
 Valid states are `idle`, `running`, `waiting`, `failed`, and `review`.
 
+### `src/main/providers/claude-code.cjs`
+
+Reads recent JSONL files under `~/.claude/projects`. It uses timestamps, record types, and error markers while deliberately summarizing messages as event types instead of exposing prompt or response text.
+
 ### `src/main/providers/opencode.cjs`
 
 Reads OpenCode sessions through the public CLI command:
@@ -70,6 +77,10 @@ opencode session list --format json --max-count 8
 ```
 
 It normalizes session summaries into the shared activity model without reading private OpenCode storage files directly.
+
+### `src/main/providers/t3code.cjs`
+
+Reads T3Code command-session summaries when either `t3code` or `t3` exposes a compatible `session list --format json --max-count 8` command. If no compatible CLI is present, the provider reports idle with an adapter error.
 
 ### `src/main/validate-pet.cjs`
 
@@ -90,9 +101,13 @@ The renderer uses the Codex atlas contract:
 flowchart LR
   A["Codex session files"] --> B["Codex provider"]
   F["OpenCode CLI"] --> G["OpenCode provider"]
+  J["Claude Code JSONL"] --> K["Claude Code provider"]
+  L["T3Code CLI"] --> M["T3Code provider"]
   H["JSON status file"] --> I["Status-file provider"]
   B --> C["activity state"]
   G --> C
+  K --> C
+  M --> C
   I --> C
   C --> D["pet state"]
   D --> E["renderer animation row"]

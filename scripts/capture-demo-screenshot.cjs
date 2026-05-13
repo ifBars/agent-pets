@@ -32,7 +32,9 @@ async function main() {
   );
 
   ipcMain.handle("pets:list", async () => readPets(codexHome));
-  ipcMain.handle("activity:read", async () => readActivity({ codexHome, statusFile }));
+  ipcMain.handle("activity:read", async (_event, options = {}) =>
+    readActivity({ ...options, codexHome, statusFile: options.statusFile || statusFile }),
+  );
   ipcMain.handle("settings:get", async () => readSettings(settingsPath));
   ipcMain.handle("settings:update", async (_event, patch) => updateSettings(settingsPath, patch));
 
@@ -59,6 +61,13 @@ async function main() {
     },
   });
   await sleep(1500);
+  if (process.env.AGENT_PETS_CAPTURE_OPEN === "threads") {
+    await win.webContents.executeJavaScript("document.getElementById('threadBadge').click()");
+    await sleep(250);
+  } else if (process.env.AGENT_PETS_CAPTURE_OPEN === "settings") {
+    await win.webContents.executeJavaScript("document.getElementById('settingsButton').click()");
+    await sleep(250);
+  }
   const image = await win.capturePage();
   await fs.writeFile(screenshotPath, image.toPNG());
   await fs.rm(statusFile, { force: true });

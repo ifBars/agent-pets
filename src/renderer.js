@@ -27,22 +27,28 @@ const STATE_FRAMES = {
 const params = new URLSearchParams(location.search);
 const codexHome = params.get("codexHome") || "";
 const initialPetId = params.get("pet") || "";
-const initialState = params.get("state") || "auto";
-let provider = params.get("provider") || "codex";
-let currentState = initialState;
+const initialState = params.get("state") || "";
+let provider = params.get("provider") || "";
+let petSize = Number(params.get("petSize")) || 0;
+let currentState = initialState || "auto";
 let requestedState = "auto";
 let timer = null;
 let pets = [];
 let statusFile = params.get("statusFile") || "";
 let popoverOpen = false;
+let settingsOpen = false;
 
 const petElement = document.getElementById("pet");
 const threadBadge = document.getElementById("threadBadge");
 const threadPopover = document.getElementById("threadPopover");
+const settingsButton = document.getElementById("settingsButton");
+const settingsPopover = document.getElementById("settingsPopover");
 const petSelect = document.getElementById("petSelect");
 const stateSelect = document.getElementById("stateSelect");
 const providerSelect = document.getElementById("providerSelect");
 const statusFileInput = document.getElementById("statusFileInput");
+const statusFileRow = document.getElementById("statusFileRow");
+const petSizeInput = document.getElementById("petSizeInput");
 const activeTitle = document.getElementById("activeTitle");
 const activeDetail = document.getElementById("activeDetail");
 const statusPill = document.getElementById("statusPill");
@@ -157,6 +163,8 @@ function labelForSource(source) {
   return {
     codex: "Codex",
     opencode: "OpenCode",
+    "claude-code": "Claude Code",
+    t3code: "T3Code",
     "json-status": "Status file",
   }[source] || "Agent";
 }
@@ -186,11 +194,13 @@ async function boot() {
     selectedPetId: "",
     selectedState: "auto",
     provider: "codex",
+    petSize: 112,
     statusFile: "",
   }));
   statusFile = statusFile || settings.statusFile || "";
   provider = provider || settings.provider || "codex";
-  requestedState = initialState;
+  petSize = petSize || settings.petSize || 112;
+  requestedState = initialState || settings.selectedState || "auto";
   pets = await window.codexPets.listPets(codexHome);
   petSelect.textContent = "";
   for (const pet of pets) {
@@ -202,20 +212,35 @@ async function boot() {
   selectPet(initialPetId || settings.selectedPetId);
   statusFileInput.value = statusFile;
   providerSelect.value = provider;
+  petSizeInput.value = String(petSize);
+  applyPetSize(petSize);
   stateSelect.value = requestedState;
   updateProviderControls();
-  setState(currentState);
+  setState(requestedState === "auto" ? "idle" : requestedState);
   await refreshActivity();
   window.setInterval(() => refreshActivity().catch(console.error), 5000);
 }
 
 function setPopoverOpen(value) {
   popoverOpen = value;
+  if (popoverOpen) setSettingsOpen(false);
   threadPopover.hidden = !popoverOpen;
 }
 
+function setSettingsOpen(value) {
+  settingsOpen = value;
+  if (settingsOpen) setPopoverOpen(false);
+  settingsPopover.hidden = !settingsOpen;
+}
+
+function applyPetSize(value) {
+  petSize = Math.min(160, Math.max(72, Math.round(Number(value) || 112)));
+  document.getElementById("app").style.setProperty("--pet-size", `${petSize}px`);
+  petSizeInput.value = String(petSize);
+}
+
 function updateProviderControls() {
-  statusFileInput.hidden = provider !== "json-status";
+  statusFileRow.hidden = provider !== "json-status";
 }
 
 petSelect.addEventListener("change", () => selectPet(petSelect.value));
@@ -226,6 +251,12 @@ providerSelect.addEventListener("change", () => {
   window.codexPets.updateSettings({ provider }).catch(console.error);
   refreshActivity().catch(console.error);
 });
+petSizeInput.addEventListener("input", () => {
+  applyPetSize(petSizeInput.value);
+});
+petSizeInput.addEventListener("change", () => {
+  window.codexPets.updateSettings({ petSize }).catch(console.error);
+});
 statusFileInput.addEventListener("change", () => {
   statusFile = statusFileInput.value.trim();
   window.codexPets.updateSettings({ statusFile }).catch(console.error);
@@ -233,8 +264,12 @@ statusFileInput.addEventListener("change", () => {
 });
 petElement.addEventListener("dblclick", () => setState("waving"));
 threadBadge.addEventListener("click", () => setPopoverOpen(!popoverOpen));
+settingsButton.addEventListener("click", () => setSettingsOpen(!settingsOpen));
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") setPopoverOpen(false);
+  if (event.key === "Escape") {
+    setPopoverOpen(false);
+    setSettingsOpen(false);
+  }
 });
 
 boot().catch((error) => {

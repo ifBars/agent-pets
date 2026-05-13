@@ -45,6 +45,18 @@ Monitor OpenCode through its CLI session list:
 bun run pets -- --provider opencode
 ```
 
+Monitor Claude Code local sessions:
+
+```bash
+bun run pets -- --provider claude-code
+```
+
+Monitor T3Code when its CLI is available:
+
+```bash
+bun run pets -- --provider t3code
+```
+
 Emit a status update from another agent or task wrapper:
 
 ```bash
@@ -96,9 +108,12 @@ pets
 - Runs as a transparent, frameless, always-on-top Electron desktop pet.
 - Reads local Codex session metadata and recent rollout JSONL records.
 - Reads OpenCode session summaries through `opencode session list --format json`.
+- Reads Claude Code local session JSONL metadata without exposing prompt text.
+- Reads T3Code command-session summaries when a compatible CLI is installed.
 - Reads a generic JSON status file for non-Codex agents.
 - Maps active Codex work into pet animation states.
 - Persists selected pet, state mode, status-file path, and window bounds.
+- Persists provider choice and pet size.
 - Generates pet contact sheets and review JSON for asset QA.
 - Shows a compact local activity panel with recent sessions.
 - Keeps all session access local and read-only.
@@ -192,5 +207,7 @@ Release and launch notes:
 - [docs/release-checklist.md](docs/release-checklist.md)
 - [docs/x-launch-post.md](docs/x-launch-post.md)
 - [docs/adapters/opencode.md](docs/adapters/opencode.md)
+- [docs/adapters/claude-code.md](docs/adapters/claude-code.md)
+- [docs/adapters/t3code.md](docs/adapters/t3code.md)
 - [PRIVACY.md](PRIVACY.md)
 - [SECURITY.md](SECURITY.md)

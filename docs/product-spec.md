@@ -19,8 +19,12 @@ Agent Pets turns Codex-compatible pets into a desktop status layer for AI coding
 - Automatic Codex activity mode.
 - Manual state override for testing and demos.
 - Persistent selected pet, state mode, status-file path, and window bounds.
-- Compact activity panel with recent Codex sessions.
+- Minimal pet-first UI with an active-thread badge.
+- Top-opening thread popover with recent agent sessions.
+- Compact settings menu for provider, pet, state, status file, and pet size.
 - Read-only provider for local Codex session files.
+- Read-only provider for local Claude Code session metadata.
+- CLI-backed providers for OpenCode and T3Code session summaries.
 - Generic JSON status-file provider for other agents.
 - Defensive parsing so malformed logs do not crash the app.
 
@@ -62,9 +66,11 @@ Agent Pets turns Codex-compatible pets into a desktop status layer for AI coding
 
 1. Codex local provider.
 2. Generic file provider: watch a JSON file shaped like `{ "state": "running", "title": "..." }`.
-3. Claude Code provider.
-4. Aider/OpenCode provider.
-5. Optional MCP status provider for tools that expose agent activity.
+3. OpenCode CLI provider.
+4. Claude Code local session provider.
+5. T3Code CLI provider.
+6. Aider/Gemini/Copilot provider research.
+7. Optional MCP status provider for tools that expose agent activity.
 
 ## Trust And Safety
 

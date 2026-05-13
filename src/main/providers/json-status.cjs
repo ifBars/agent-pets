@@ -6,6 +6,7 @@ const VALID_STATES = new Set(["idle", "running", "waiting", "failed", "review"])
 
 async function readJsonStatusActivity(statusFile, options = {}) {
   const now = options.now || new Date();
+  if (!cleanString(statusFile)) return emptyActivity("", now, "No status file configured");
   const resolved = path.resolve(statusFile);
   let parsed = null;
   let stat = null;

@@ -5,6 +5,7 @@ const DEFAULT_SETTINGS = {
   selectedPetId: "",
   selectedState: "auto",
   provider: "codex",
+  petSize: 112,
   statusFile: "",
   windowBounds: null,
 };
@@ -36,14 +37,21 @@ function normalizeSettings(value) {
     selectedPetId: cleanString(input.selectedPetId),
     selectedState: normalizeState(input.selectedState),
     provider: normalizeProvider(input.provider),
+    petSize: normalizePetSize(input.petSize),
     statusFile: cleanString(input.statusFile),
     windowBounds: normalizeBounds(input.windowBounds),
   };
 }
 
 function normalizeProvider(value) {
-  const valid = new Set(["codex", "opencode", "json-status"]);
+  const valid = new Set(["codex", "opencode", "claude-code", "t3code", "json-status"]);
   return valid.has(value) ? value : "codex";
+}
+
+function normalizePetSize(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return DEFAULT_SETTINGS.petSize;
+  return Math.min(160, Math.max(72, Math.round(parsed)));
 }
 
 function normalizeState(value) {
@@ -76,6 +84,7 @@ module.exports = {
   DEFAULT_SETTINGS,
   normalizeSettings,
   normalizeProvider,
+  normalizePetSize,
   readSettings,
   updateSettings,
   writeSettings,
