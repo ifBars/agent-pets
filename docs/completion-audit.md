@@ -16,11 +16,11 @@ Objective: create a fully functional, production-grade, marketable, practical op
 | Companion skill | `skills/agent-pet-maker/SKILL.md`. | Done |
 | Companion tooling | `bin/agent-pets-validate.cjs`, `src/main/validate-pet.cjs`, and `scripts/generate-pet-qa.cjs` for contact-sheet review. | Done |
 | Tests | `bun test` passes 19 tests across provider, pet-store, settings, status writer, QA, launch-kit, release verifier, and validator modules. | Done |
-| Packaging | `bun run pack` builds `dist/win-unpacked`; `bun run dist:win` builds NSIS installer and portable EXE; WSL produced Linux AppImage and deb; silent Windows install/launch/uninstall smoke passed in a disposable `.demo` directory; GitHub Release run `25794771282` passed Windows, macOS, and Linux native packaging and uploaded artifacts. | Done |
+| Packaging | `bun run pack` builds `dist/win-unpacked`; `bun run dist:win` builds NSIS installer and portable EXE; WSL produced Linux AppImage and deb; silent Windows install/launch/uninstall smoke passed in a disposable `.demo` directory; GitHub Release run `25795075459` passed Windows, macOS, and Linux native packaging and uploaded artifacts. | Done |
 | Demo readiness | `docs/demo-script.md` exists, `scripts/demo-status.cjs` can drive all states, `docs/demo/agent-pets-demo.png` / `docs/demo/agent-pets-demo.mp4` are generated from the renderer, and `docs/launch-kit/REVIEW.md` records local visual inspection. | Mostly done |
 | Launch copy | `docs/x-launch-post.md`, `docs/release-checklist.md`, and `docs/launch-kit` with MP4, thumbnail, copy, review notes, and checksum manifest. | Done |
 | Production-grade polish | App has branded icon/tray assets, persistent settings, status-file input, generated screenshot/video artifacts, release artifact checks, and a clear privacy/security posture. Platform signing/notarization remains a release-infrastructure caveat. | Done for v0.1.0 |
-| OSS readiness | Public repository at `https://github.com/ifBars/agent-pets`, MIT license, README, CONTRIBUTING, privacy/security docs, issue templates, PR template, CI and release workflows. | Done |
+| OSS readiness | Public repository at `https://github.com/ifBars/agent-pets`, public release at `https://github.com/ifBars/agent-pets/releases/tag/v0.1.0`, MIT license, README, CONTRIBUTING, privacy/security docs, issue templates, PR template, CI and release workflows. | Done |
 
 ## Verified Commands
 
@@ -42,7 +42,8 @@ manual smoke: silent NSIS install to .demo\installer-smoke\AgentPets, launch ins
 manual review: inspect docs/demo/agent-pets-demo.png and docs/demo/pingu-qa/contact-sheet.png
 bun run release:verify
 GitHub CI run 25794724697: windows-latest install, bun test, and package smoke passed
-GitHub Release run 25794771282: windows-latest, macos-latest, and ubuntu-latest builds passed and uploaded artifacts
+GitHub Release run 25795075459: windows-latest, macos-latest, and ubuntu-latest builds passed and uploaded artifacts
+gh release create v0.1.0: published Windows installer/portable, macOS DMG, Linux AppImage/deb, and updater metadata
 ```
 
 ## Residual Caveats
