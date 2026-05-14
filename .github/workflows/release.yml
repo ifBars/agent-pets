@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - package.json
+      - packages/opencode-agent-pets/package.json
     tags:
       - "v*"
   release:
@@ -65,6 +66,7 @@ jobs:
             should_release=true
           else
             version="$(node -p "require('./package.json').version")"
+            opencode_version="$(node -p "require('./packages/opencode-agent-pets/package.json').version")"
 
             if git show HEAD^:package.json > /tmp/previous-package.json 2>/dev/null; then
               previous_version="$(node -p "require('/tmp/previous-package.json').version")"
@@ -72,10 +74,22 @@ jobs:
               previous_version=""
             fi
 
-            if [ "${version}" != "${previous_version}" ]; then
+            if git show HEAD^:packages/opencode-agent-pets/package.json > /tmp/previous-opencode-package.json 2>/dev/null; then
+              previous_opencode_version="$(node -p "require('/tmp/previous-opencode-package.json').version")"
+            else
+              previous_opencode_version=""
+            fi
+
+            if [ "${version}" != "${previous_version}" ] || [ "${opencode_version}" != "${previous_opencode_version}" ]; then
               tag="v${version}"
               should_release=true
             fi
+          fi
+
+          opencode_version="$(node -p "require('./packages/opencode-agent-pets/package.json').version")"
+          if [ -n "${version}" ] && [ "${opencode_version}" != "${version}" ]; then
+            echo "Version mismatch: package.json is ${version}, packages/opencode-agent-pets/package.json is ${opencode_version}."
+            exit 1
           fi
 
           if [ "${should_release}" = "true" ] && [ "${{ github.event_name }}" != "release" ]; then

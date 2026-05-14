@@ -2,27 +2,35 @@
 
 OpenCode plugin that bridges realtime session status to [Agent Pets](https://github.com/ifBars/agent-pets).
 
-## Install
+## Quick Start
 
-From an Agent Pets checkout, install locally:
-
-```bash
-bun run opencode:install-local
-```
-
-Then run OpenCode and toggle the desktop pet:
-
-```text
-/pet
-```
-
-For a published package:
+Install the plugin globally:
 
 ```bash
 opencode plugin opencode-agent-pets --global
 ```
 
-Or add it to `opencode.json`:
+Open OpenCode, then toggle the desktop pet:
+
+```text
+/pet
+```
+
+The plugin launches Agent Pets in OpenCode mode and keeps the pet updated with realtime session status.
+
+## Local Checkout
+
+```bash
+bun run opencode:install-local
+```
+
+Then open OpenCode and run:
+
+```text
+/pet
+```
+
+You can also add the published plugin directly to `opencode.json`:
 
 ```json
 {

@@ -19,9 +19,13 @@ describe("workflow config", () => {
     expect(workflow).toContain("- main");
     expect(workflow).toContain("paths:");
     expect(workflow).toContain("- package.json");
+    expect(workflow).toContain("- packages/opencode-agent-pets/package.json");
     expect(workflow).toContain('elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then');
     expect(workflow).toContain("git show HEAD^:package.json > /tmp/previous-package.json");
-    expect(workflow).toContain('if [ "${version}" != "${previous_version}" ]; then');
+    expect(workflow).toContain("git show HEAD^:packages/opencode-agent-pets/package.json > /tmp/previous-opencode-package.json");
+    expect(workflow).toContain('if [ "${version}" != "${previous_version}" ] || [ "${opencode_version}" != "${previous_opencode_version}" ]; then');
+    expect(workflow).toContain("opencode_version=\"$(node -p \"require('./packages/opencode-agent-pets/package.json').version\")\"");
+    expect(workflow).toContain('Version mismatch: package.json is ${version}, packages/opencode-agent-pets/package.json is ${opencode_version}.');
     expect(workflow).toContain('tag="v${version}"');
     expect(workflow).toContain('gh release view "${tag}"');
     expect(workflow).toContain('bun pm view "@ifbars/agent-pets@${version}" version');

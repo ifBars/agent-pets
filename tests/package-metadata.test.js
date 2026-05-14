@@ -30,15 +30,23 @@ describe("package metadata", () => {
   });
 
   test("opencode plugin package is public-publish ready", () => {
+    const rootManifest = readJson("package.json");
     const manifest = readJson("packages/opencode-agent-pets/package.json");
+    const lockfile = fs.readFileSync(path.join(__dirname, "..", "bun.lock"), "utf8");
 
     expect(manifest.name).toBe("opencode-agent-pets");
+    expect(manifest.version).toBe(rootManifest.version);
+    expect(lockfile).toContain(`"version": "${rootManifest.version}"`);
     expect(manifest.private).not.toBe(true);
     expect(manifest.publishConfig).toEqual({ access: "public" });
     expect(manifest.repository.url).toBe("https://github.com/ifBars/agent-pets.git");
     expect(manifest.repository.directory).toBe("packages/opencode-agent-pets");
     expect(manifest.bugs.url).toBe("https://github.com/ifBars/agent-pets/issues");
     expect(manifest.files).toContain("src");
+
+    const readme = fs.readFileSync(path.join(__dirname, "..", "packages", "opencode-agent-pets", "README.md"), "utf8");
+    expect(readme).toContain("opencode plugin opencode-agent-pets --global");
+    expect(readme).toContain("/pet");
   });
 });
 
