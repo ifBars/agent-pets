@@ -320,13 +320,18 @@ jobs:
       - name: Check npm publish results
         run: |
           set -euo pipefail
+          failed=false
 
           if [ "${{ steps.publish_agent_pets.outcome }}" != "success" ]; then
             echo "agent-pets publish failed."
-            exit 1
+            failed=true
           fi
 
           if [ "${{ steps.publish_opencode_agent_pets.outcome }}" != "success" ]; then
             echo "opencode-agent-pets publish failed."
+            failed=true
+          fi
+
+          if [ "${failed}" = "true" ]; then
             exit 1
           fi
