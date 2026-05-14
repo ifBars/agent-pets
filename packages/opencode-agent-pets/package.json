@@ -1,6 +1,6 @@
 {
   "name": "opencode-agent-pets",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "OpenCode plugin that bridges realtime session status to Agent Pets.",
   "type": "module",
   "license": "MIT",
