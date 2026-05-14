@@ -58,6 +58,10 @@ function normalizeCommandSession(item, index, source, now) {
     cleanString(item.updatedAt) ||
     cleanString(item.updated_at) ||
     cleanString(item.modifiedAt) ||
+    timestampString(item.updated) ||
+    timestampString(item.created) ||
+    timestampString(item.time_updated) ||
+    timestampString(item.time_created) ||
     cleanString(item.time?.updated) ||
     cleanString(item.time?.created) ||
     now.toISOString();
@@ -138,6 +142,13 @@ function cleanString(value) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+function timestampString(value) {
+  const timestamp = Number(value);
+  if (!Number.isFinite(timestamp)) return null;
+  const date = new Date(timestamp);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+}
+
 module.exports = {
   VALID_STATES,
   aggregateActivity,
@@ -147,4 +158,5 @@ module.exports = {
   normalizeCommandSessions,
   normalizeState,
   readJsonlTail,
+  timestampString,
 };

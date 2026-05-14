@@ -6,7 +6,15 @@ Agent Pets can monitor OpenCode without a custom daemon by shelling out to the O
 bun run pets -- --provider opencode
 ```
 
-The provider reads:
+The provider first reads the local OpenCode SQLite-backed session index through the official CLI:
+
+```bash
+opencode db --format json "<session query>"
+```
+
+That path is intentionally global, so the desktop pet can show recent OpenCode sessions across projects instead of only the directory where `pets` was launched.
+
+If the database query is unavailable, Agent Pets falls back to:
 
 ```bash
 opencode session list --format json --max-count 8
@@ -14,7 +22,8 @@ opencode session list --format json --max-count 8
 
 Agent Pets normalizes the returned session summaries into the shared activity model:
 
-- recently updated sessions become `running`;
+- active assistant/user turns become `running`;
+- completed `step-finish: stop` turns become `review`;
 - recent inactive sessions become `review`;
 - explicit failed/error statuses become `failed`;
 - older sessions become `idle`.
@@ -22,8 +31,8 @@ Agent Pets normalizes the returned session summaries into the shared activity mo
 ## Requirements
 
 - `opencode` must be installed and available on `PATH`.
-- The OpenCode CLI must have local session data available for `opencode session list`.
+- The OpenCode CLI must have local session data available for `opencode db` or `opencode session list`.
 
 ## Notes
 
-This adapter intentionally uses the public CLI command instead of reading OpenCode's private storage files directly. That keeps the first integration stable across storage migrations.
+This adapter intentionally uses OpenCode CLI commands instead of opening OpenCode's private database directly from Electron. That keeps the integration read-only and lets OpenCode own its storage migrations.

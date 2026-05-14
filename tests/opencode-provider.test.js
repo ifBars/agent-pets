@@ -41,6 +41,44 @@ describe("opencode activity provider", () => {
     expect(activity.active.latestEvent).toBe("Ready to inspect");
   });
 
+  test("normalizes opencode db sessions across projects and completed steps as review", async () => {
+    const activity = await readOpenCodeActivity({
+      now: new Date("2026-05-13T10:20:00.000Z"),
+      runner: async () => [
+        {
+          id: "oc-db-1",
+          title: "Global session",
+          directory: "C:\\Users\\ghost\\Documents\\Codex",
+          project_id: "global",
+          time_updated: new Date("2026-05-13T10:19:30.000Z").getTime(),
+          message_data: JSON.stringify({ role: "assistant", time: { completed: new Date("2026-05-13T10:19:29.000Z").getTime() }, finish: "stop" }),
+          part_data: JSON.stringify({ type: "step-finish", reason: "stop" }),
+        },
+      ],
+    });
+
+    expect(activity.state).toBe("review");
+    expect(activity.active.directory).toBe("C:\\Users\\ghost\\Documents\\Codex");
+    expect(activity.active.latestEvent).toBe("finished: stop");
+  });
+
+  test("uses numeric opencode timestamps instead of treating rows as always fresh", () => {
+    const sessions = normalizeSessions(
+      [
+        {
+          id: "oc-old",
+          title: "Old project session",
+          updated: new Date("2026-05-13T09:00:00.000Z").getTime(),
+          created: new Date("2026-05-13T08:00:00.000Z").getTime(),
+        },
+      ],
+      new Date("2026-05-13T10:20:00.000Z"),
+    );
+
+    expect(sessions[0].state).toBe("idle");
+    expect(sessions[0].updatedAt).toBe("2026-05-13T09:00:00.000Z");
+  });
+
   test("handles no opencode sessions as idle", async () => {
     const activity = await readOpenCodeActivity({
       now: new Date("2026-05-13T10:20:00.000Z"),
