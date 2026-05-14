@@ -60,8 +60,15 @@ jobs:
             tag="v${version}"
             should_release=true
           else
-            if git diff --name-only HEAD^ HEAD -- package.json | grep -qx "package.json"; then
-              version="$(node -p "require('./package.json').version")"
+            version="$(node -p "require('./package.json').version")"
+
+            if git show HEAD^:package.json > /tmp/previous-package.json 2>/dev/null; then
+              previous_version="$(node -p "require('/tmp/previous-package.json').version")"
+            else
+              previous_version=""
+            fi
+
+            if [ "${version}" != "${previous_version}" ]; then
               tag="v${version}"
               should_release=true
             fi
@@ -146,7 +153,7 @@ jobs:
 
   github-release:
     name: Publish GitHub release assets
-    if: needs.prepare.outputs.should_release == 'true' && github.event_name == 'push'
+    if: needs.prepare.outputs.should_release == 'true' && github.event_name != 'release'
     needs:
       - prepare
       - build
@@ -224,8 +231,8 @@ jobs:
           fi
 
   npm-publish-version-bump:
-    name: Publish npm packages from version bump
-    if: needs.prepare.outputs.should_release == 'true' && github.event_name == 'push'
+    name: Publish npm packages from generated release
+    if: needs.prepare.outputs.should_release == 'true' && github.event_name != 'release'
     needs:
       - prepare
       - build

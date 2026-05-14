@@ -19,8 +19,9 @@ describe("workflow config", () => {
     expect(workflow).toContain("- main");
     expect(workflow).toContain("paths:");
     expect(workflow).toContain("- package.json");
-    expect(workflow).toContain("git diff --name-only HEAD^ HEAD -- package.json");
     expect(workflow).toContain('elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then');
+    expect(workflow).toContain("git show HEAD^:package.json > /tmp/previous-package.json");
+    expect(workflow).toContain('if [ "${version}" != "${previous_version}" ]; then');
     expect(workflow).toContain('tag="v${version}"');
     expect(workflow).toContain('gh release view "${tag}"');
     expect(workflow).toContain('bun pm view "agent-pets@${version}" version');
@@ -28,8 +29,8 @@ describe("workflow config", () => {
     expect(workflow).toContain('--target "${GITHUB_SHA}"');
     expect(workflow).toContain("name: Publish npm packages from GitHub release");
     expect(workflow).toContain("if: needs.prepare.outputs.should_release == 'true' && github.event_name == 'release'");
-    expect(workflow).toContain("name: Publish npm packages from version bump");
-    expect(workflow).toContain("if: needs.prepare.outputs.should_release == 'true' && github.event_name == 'push'");
+    expect(workflow).toContain("name: Publish npm packages from generated release");
+    expect(workflow).toContain("if: needs.prepare.outputs.should_release == 'true' && github.event_name != 'release'");
     expect(workflow).toContain('bun pm view "opencode-agent-pets@${version}" version');
     expect(workflow).toContain("bun publish --access public");
     expect(workflow).toContain("working-directory: packages/opencode-agent-pets");
