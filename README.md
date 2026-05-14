@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="media/agent-pets-preview.gif" width="292" alt="Agent Pets preview" />
+  <img src="media/agent-pets-preview.gif" width="360" alt="Agent Pets preview" />
 </p>
 
 Bring your Codex pet anywhere.
