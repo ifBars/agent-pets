@@ -23,6 +23,10 @@ const STATE_FRAMES = {
   running: rowFrames(7, 6, 120, 220),
   review: rowFrames(8, 6, 150, 280),
 };
+const ACTIVE_REFRESH_MS = 3000;
+const IDLE_REFRESH_MS = 8000;
+const DESKTOP_REFRESH_MS = 30000;
+const DRAG_MOVE_MIN_MS = 16;
 
 const params = new URLSearchParams(location.search);
 const codexHome = params.get("codexHome") || "";
@@ -43,6 +47,11 @@ let ignoringMouseEvents = null;
 let petDragging = false;
 let lastDragScreenX = 0;
 let lastDragScreenY = 0;
+let pendingDragDeltaX = 0;
+let pendingDragDeltaY = 0;
+let lastDragMoveAt = 0;
+let refreshTimer = null;
+let lastActivityState = "idle";
 
 const petElement = document.getElementById("pet");
 const petStage = document.querySelector(".pet-stage");
@@ -137,6 +146,8 @@ async function refreshActivity() {
     if (refreshQueued) {
       refreshQueued = false;
       window.setTimeout(() => refreshActivity().catch(console.error), 0);
+    } else {
+      scheduleNextRefresh();
     }
   }
 }
@@ -146,6 +157,7 @@ function renderActivity(activity) {
   const sessions = activity.sessions || [];
   const isDesktop = activity.source === "desktop";
   const badgeCount = sessions.filter(isBadgeSession).length;
+  lastActivityState = activity.state || "idle";
   appElement.classList.toggle("desktop-mode", isDesktop);
   threadBadge.hidden = isDesktop;
   if (isDesktop && popoverOpen) setPopoverOpen(false);
@@ -297,7 +309,17 @@ async function boot() {
   updateProviderControls();
   setState(requestedState === "auto" ? "idle" : requestedState);
   await refreshActivity();
-  window.setInterval(() => refreshActivity().catch(console.error), 1500);
+}
+
+function refreshDelayForState() {
+  if (provider === "desktop") return DESKTOP_REFRESH_MS;
+  if (lastActivityState === "running" || lastActivityState === "waiting") return ACTIVE_REFRESH_MS;
+  return IDLE_REFRESH_MS;
+}
+
+function scheduleNextRefresh() {
+  if (refreshTimer) window.clearTimeout(refreshTimer);
+  refreshTimer = window.setTimeout(() => refreshActivity().catch(console.error), refreshDelayForState());
 }
 
 function setWindowMousePassthrough(ignore) {
@@ -308,14 +330,13 @@ function setWindowMousePassthrough(ignore) {
 
 function isInteractivePoint(event) {
   if (event.buttons) return true;
-  const elements = document.elementsFromPoint(event.clientX, event.clientY);
-  return elements.some((element) => {
-    if (!(element instanceof Element)) return false;
-    if (element.closest(".pet-stage")) return true;
-    if (popoverOpen && element.closest(".thread-popover")) return true;
-    if (settingsOpen && element.closest(".settings-popover")) return true;
-    return false;
-  });
+  return isPointInsideElement(event, petStage) || (popoverOpen && isPointInsideElement(event, threadPopover)) || (settingsOpen && isPointInsideElement(event, settingsPopover));
+}
+
+function isPointInsideElement(event, element) {
+  if (!element || element.hidden) return false;
+  const rect = element.getBoundingClientRect();
+  return event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
 }
 
 function updateMousePassthrough(event) {
@@ -342,11 +363,26 @@ function updatePetDrag(event) {
   const deltaY = event.screenY - lastDragScreenY;
   lastDragScreenX = event.screenX;
   lastDragScreenY = event.screenY;
-  if (deltaX || deltaY) window.codexPets.moveWindowBy(deltaX, deltaY);
+  pendingDragDeltaX += deltaX;
+  pendingDragDeltaY += deltaY;
+  flushPetDrag(false);
+}
+
+function flushPetDrag(force) {
+  if (!pendingDragDeltaX && !pendingDragDeltaY) return;
+  const now = performance.now();
+  if (!force && now - lastDragMoveAt < DRAG_MOVE_MIN_MS) return;
+  const deltaX = pendingDragDeltaX;
+  const deltaY = pendingDragDeltaY;
+  pendingDragDeltaX = 0;
+  pendingDragDeltaY = 0;
+  lastDragMoveAt = now;
+  window.codexPets.moveWindowBy(deltaX, deltaY);
 }
 
 function endPetDrag(event) {
   if (!petDragging) return;
+  flushPetDrag(true);
   petDragging = false;
   petStage.classList.remove("is-dragging");
   updateMousePassthrough(event);
@@ -521,6 +557,7 @@ providerSelect.addEventListener("change", () => {
   provider = providerSelect.value;
   updateProviderControls();
   window.codexPets.updateSettings({ provider }).catch(console.error);
+  if (refreshTimer) window.clearTimeout(refreshTimer);
   refreshActivity().catch(console.error);
 });
 petSizeInput.addEventListener("input", () => {
@@ -543,6 +580,7 @@ window.addEventListener("mousemove", (event) => {
   updateMousePassthrough(event);
 });
 window.addEventListener("mouseleave", () => {
+  flushPetDrag(true);
   petDragging = false;
   petStage.classList.remove("is-dragging");
   setWindowMousePassthrough(true);

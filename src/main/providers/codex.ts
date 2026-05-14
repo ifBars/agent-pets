@@ -4,6 +4,8 @@ import type { ActivityPayload, ActivitySession, ActivityState, ProviderReadOptio
 
 const ACTIVE_WINDOW_MS = 90 * 1000;
 const REVIEW_WINDOW_MS = 20 * 60 * 1000;
+const SESSION_HEAD_BYTES = 64 * 1024;
+const SESSION_TAIL_BYTES = 96 * 1024;
 
 export async function readCodexActivity(codexHome: string, options: ProviderReadOptions = {}): Promise<ActivityPayload> {
   const now = options.now || new Date();
@@ -12,7 +14,7 @@ export async function readCodexActivity(codexHome: string, options: ProviderRead
   const recent = await resolveRecentCodexSessions(codexHome, entries);
   const sessions: ActivitySession[] = [];
   for (const entry of recent) {
-    const sessionPath = entry.sessionPath || (await findSessionPath(codexHome, entry.id));
+    const sessionPath = entry.sessionPath || null;
     const sample = sessionPath ? await readSessionSample(sessionPath) : null;
     sessions.push(classifySession(entry, sessionPath, sample, now));
   }
@@ -132,7 +134,7 @@ async function readSessionSample(filePath: string): Promise<any | null> {
   let text = "";
   try {
     stat = await fs.stat(filePath);
-    text = await fs.readFile(filePath, "utf8");
+    text = await readSessionHeadAndTail(filePath, stat.size);
   } catch {
     return null;
   }
@@ -144,6 +146,25 @@ async function readSessionSample(filePath: string): Promise<any | null> {
     mtimeMs: stat.mtimeMs,
     records,
   };
+}
+
+async function readSessionHeadAndTail(filePath: string, size: number): Promise<string> {
+  const handle = await fs.open(filePath, "r");
+  try {
+    if (size <= SESSION_HEAD_BYTES + SESSION_TAIL_BYTES) {
+      const buffer = Buffer.alloc(size);
+      const { bytesRead } = await handle.read(buffer, 0, size, 0);
+      return buffer.subarray(0, bytesRead).toString("utf8");
+    }
+
+    const headBuffer = Buffer.alloc(SESSION_HEAD_BYTES);
+    const tailBuffer = Buffer.alloc(SESSION_TAIL_BYTES);
+    const { bytesRead: headBytes } = await handle.read(headBuffer, 0, headBuffer.length, 0);
+    const { bytesRead: tailBytes } = await handle.read(tailBuffer, 0, tailBuffer.length, Math.max(0, size - SESSION_TAIL_BYTES));
+    return `${headBuffer.subarray(0, headBytes).toString("utf8")}\n${tailBuffer.subarray(0, tailBytes).toString("utf8")}`;
+  } finally {
+    await handle.close();
+  }
 }
 
 async function readSessionFileMeta(filePath: string): Promise<any | null> {

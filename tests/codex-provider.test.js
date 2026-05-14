@@ -358,6 +358,44 @@ describe("codex activity provider", () => {
 
     expect(activity.sessions[0].title).toBe("Look into codex's pets use");
   });
+
+  test("skips expensive session path lookup for stale index-only rows", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "agent-pets-codex-stale-index-"));
+    const codexHome = path.join(root, ".codex");
+    const sessionDir = path.join(codexHome, "sessions", "2026", "05", "13");
+    const now = new Date("2026-05-13T10:00:02.000Z");
+    await fs.mkdir(sessionDir, { recursive: true });
+    await fs.writeFile(
+      path.join(codexHome, "session_index.jsonl"),
+      `${JSON.stringify({
+        id: "stale-index-only",
+        thread_name: "Indexed only",
+        updated_at: "2026-05-13T09:00:00.000Z",
+      })}\n`,
+      "utf8",
+    );
+
+    const sessionPath = path.join(sessionDir, "rollout-2026-05-13T10-00-00-019e20ab-fc12-71a3-8209-3ccb59aaef09.jsonl");
+    await fs.writeFile(
+      sessionPath,
+      [
+        JSON.stringify({
+          timestamp: "2026-05-13T10:00:00.000Z",
+          type: "session_meta",
+          payload: { id: "019e20ab-fc12-71a3-8209-3ccb59aaef09", cwd: "C:\\Users\\ghost\\Documents\\Codex\\2026-05-13\\look-into-codex-s-pets-use" },
+        }),
+        JSON.stringify({ timestamp: "2026-05-13T10:00:01.000Z", type: "response_item", payload: { type: "message", role: "assistant" } }),
+      ].join("\n"),
+      "utf8",
+    );
+
+    const activity = await readCodexActivity(codexHome, { now });
+    const stale = activity.sessions.find((session) => session.id === "stale-index-only");
+
+    expect(stale).toBeTruthy();
+    expect(stale.sessionPath).toBeNull();
+    expect(stale.title).toBe("Indexed only");
+  });
 });
 
 async function writeCodexFixture(filePath, id, records) {

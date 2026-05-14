@@ -85,6 +85,19 @@ describe("renderer layout", () => {
     expect(main).toContain("win.setIgnoreMouseEvents(Boolean(ignore)");
     expect(preload).toContain("setIgnoreMouseEvents");
     expect(renderer).toContain("setWindowMousePassthrough(true)");
-    expect(renderer).toContain("document.elementsFromPoint");
+    expect(renderer).toContain("isPointInsideElement");
+    expect(renderer).not.toContain("document.elementsFromPoint");
+  });
+
+  test("renderer avoids high-frequency polling and drag IPC", () => {
+    const renderer = fs.readFileSync(path.join(__dirname, "..", "src", "renderer.js"), "utf8");
+
+    expect(renderer).toContain("const ACTIVE_REFRESH_MS = 3000");
+    expect(renderer).toContain("const IDLE_REFRESH_MS = 8000");
+    expect(renderer).toContain("const DESKTOP_REFRESH_MS = 30000");
+    expect(renderer).toContain("const DRAG_MOVE_MIN_MS = 16");
+    expect(renderer).toContain("scheduleNextRefresh");
+    expect(renderer).toContain("flushPetDrag(false)");
+    expect(renderer).not.toContain("window.setInterval(() => refreshActivity");
   });
 });
