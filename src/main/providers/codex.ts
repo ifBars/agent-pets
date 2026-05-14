@@ -287,7 +287,8 @@ function titleFromSessionPath(filePath: string): string {
 
 function titleFromCwd(value: unknown): string | null {
   if (typeof value !== "string" || !value.trim()) return null;
-  const name = path.basename(value.trim());
+  const trimmed = value.trim();
+  const name = trimmed.includes("\\") ? path.win32.basename(trimmed) : path.basename(trimmed);
   if (!name) return null;
   const title = name
     .replace(/^\d{4}-\d{2}-\d{2}-/, "")
