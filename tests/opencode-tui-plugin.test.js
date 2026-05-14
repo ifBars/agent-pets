@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import fs from "node:fs";
+import path from "node:path";
 import { AgentPetsOpenCodeTuiPlugin } from "../packages/opencode-agent-pets/src/tui.mjs";
 import opencodeTuiPlugin from "../packages/opencode-agent-pets/src/opencode-tui.mjs";
 
@@ -73,5 +75,12 @@ describe("opencode agent pets tui plugin", () => {
     });
     await layer.commands[0].run();
     expect(toggles).toEqual(["called"]);
+  });
+
+  test("defaults to the agent-pets launcher script", () => {
+    const source = fs.readFileSync(path.join(import.meta.dir, "..", "packages", "opencode-agent-pets", "src", "tui.mjs"), "utf8");
+
+    expect(source).toContain('["run", "agent-pets", "--", "--provider", "opencode"]');
+    expect(source).not.toContain('["run", "pets", "--"');
   });
 });

@@ -169,15 +169,16 @@ export function classifySession(entry: any, sessionPath: string | null, sample: 
   const latestPayload = findLatestPayload(records);
   const stickyCompleted = hasStickyCompletion(records);
   const pendingToolCall = !stickyCompleted && hasPendingToolCall(records);
+  const recentlyActive = !stickyCompleted && lastWriteAgeMs <= ACTIVE_WINDOW_MS && hasRecentActivePayload(records);
   const requestedInput = latestPayload?.name === "request_user_input" || JSON.stringify(latestPayload || {}).includes("request_user_input");
-  const failed = JSON.stringify(latestPayload || {}).toLowerCase().includes("failed");
+  const failed = isFailurePayload(latestPayload);
   const completed = isCompletionPayload(latestPayload);
 
   let state = "idle";
   if (stickyCompleted) state = "review";
-  else if (failed) state = "failed";
   else if (requestedInput) state = "waiting";
-  else if (pendingToolCall) state = "running";
+  else if (pendingToolCall || recentlyActive) state = "running";
+  else if (failed) state = "failed";
   else if (completed) state = "review";
   else if (isActiveWorkPayload(latestPayload) && lastWriteAgeMs <= ACTIVE_WINDOW_MS) state = "running";
   else if (isReviewPayload(latestPayload) && lastWriteAgeMs <= REVIEW_WINDOW_MS) state = "review";
@@ -231,8 +232,21 @@ function isWorkStartRecord(record: any): boolean {
   const payload = record?.payload;
   if (!payload || typeof payload !== "object") return false;
   if (payload.type === "function_call" || payload.type === "custom_tool_call") return true;
+  if (payload.type === "reasoning") return true;
+  if (payload.type === "agent_message" && payload.phase === "commentary") return true;
   if (payload.type === "message" && payload.role === "user") return true;
+  if (payload.type === "message" && payload.phase === "commentary") return true;
   if (payload.type === "user_message") return true;
+  return false;
+}
+
+function hasRecentActivePayload(records: any[]): boolean {
+  for (let index = records.length - 1; index >= 0; index -= 1) {
+    const payload = records[index]?.payload;
+    if (isPassivePayload(payload)) continue;
+    if (isCompletionPayload(payload)) return false;
+    if (isActiveWorkPayload(payload)) return true;
+  }
   return false;
 }
 
@@ -294,9 +308,22 @@ export function isReviewPayload(payload: any): boolean {
 
 function isActiveWorkPayload(payload: any): boolean {
   if (!payload || typeof payload !== "object") return false;
+  if (payload.type === "function_call") return true;
+  if (payload.type === "custom_tool_call") return true;
   if (payload.type === "function_call_output") return true;
+  if (payload.type === "custom_tool_call_output") return true;
   if (payload.type === "reasoning") return true;
+  if (payload.type === "agent_message" && payload.phase === "commentary") return true;
   if (payload.type === "message" && payload.phase === "commentary") return true;
+  return false;
+}
+
+function isFailurePayload(payload: any): boolean {
+  if (!payload || typeof payload !== "object") return false;
+  const type = typeof payload.type === "string" ? payload.type.toLowerCase() : "";
+  const status = typeof payload.status === "string" ? payload.status.toLowerCase() : "";
+  if (["failed", "failure", "error"].includes(type)) return true;
+  if (["failed", "failure", "error"].includes(status)) return true;
   return false;
 }
 

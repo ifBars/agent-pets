@@ -125,7 +125,7 @@ Open `contact-sheet.png` and inspect every row before accepting the pet.
 Other agents can drive Agent Pets by writing a status file and launching:
 
 ```bash
-bun run pets -- --status-file C:\path\to\agent-status.json
+bun run agent-pets -- --status-file C:\path\to\agent-status.json
 ```
 
 Status schema:
@@ -150,8 +150,8 @@ The asset contract is unchanged: create a normal Codex-compatible pet package in
 Launch examples:
 
 ```bash
-bun run pets -- --provider desktop --pet my-writing-buddy
-bun run pets -- --provider desktop --pet my-writing-buddy --state waving
+bun run agent-pets -- --provider desktop --pet my-writing-buddy
+bun run agent-pets -- --provider desktop --pet my-writing-buddy --state waving
 ```
 
 In this mode, Agent Pets does not detect active windows, document titles, browser tabs, or game processes. The user controls the pet, size, and animation state manually from the app. Do not add in-app image generation assumptions to the asset workflow; use the pet-generation workflow, validator, and contact-sheet QA first.

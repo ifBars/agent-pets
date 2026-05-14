@@ -147,6 +147,57 @@ describe("codex activity provider", () => {
     expect(session.state).toBe("running");
   });
 
+  test("treats reasoning after a previous completion as active work", () => {
+    const now = new Date("2026-05-13T10:00:00.000Z");
+    const session = classifySession(
+      { id: "s-thinking", thread_name: "Thinking", updated_at: "2026-05-13T09:59:59.000Z" },
+      "session.jsonl",
+      {
+        mtimeMs: now.getTime() - 1_000,
+        records: [
+          { payload: { type: "task_complete" } },
+          { payload: { type: "reasoning" } },
+        ],
+      },
+      now,
+    );
+
+    expect(session.state).toBe("running");
+  });
+
+  test("does not mark recovered tool failures as failed just because output includes failed text", () => {
+    const now = new Date("2026-05-13T10:00:00.000Z");
+    const session = classifySession(
+      { id: "s-recovered", thread_name: "Recovered tool", updated_at: "2026-05-13T09:59:59.000Z" },
+      "session.jsonl",
+      {
+        mtimeMs: now.getTime() - 1_000,
+        records: [
+          { payload: { type: "function_call", call_id: "call_1", name: "apply_patch" } },
+          { payload: { type: "custom_tool_call_output", call_id: "call_1", output: "apply_patch verification failed" } },
+        ],
+      },
+      now,
+    );
+
+    expect(session.state).toBe("running");
+  });
+
+  test("uses failed only for explicit failure payloads", () => {
+    const now = new Date("2026-05-13T10:00:00.000Z");
+    const session = classifySession(
+      { id: "s-failed", thread_name: "Failed", updated_at: "2026-05-13T09:59:59.000Z" },
+      "session.jsonl",
+      {
+        mtimeMs: now.getTime() - 2 * 60 * 1000,
+        records: [{ payload: { type: "error", message: "provider crashed" } }],
+      },
+      now,
+    );
+
+    expect(session.state).toBe("failed");
+  });
+
   test("does not mark real completed Codex threads as running when their files are touched", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "agent-pets-real-codex-"));
     const codexHome = path.join(root, ".codex");

@@ -11,6 +11,9 @@ export const DEFAULT_SETTINGS: Settings = {
   windowBounds: null,
 };
 
+export const MIN_WINDOW_WIDTH = 220;
+export const MIN_WINDOW_HEIGHT = 460;
+
 export async function readSettings(settingsPath: string): Promise<Settings> {
   try {
     const parsed = JSON.parse(await fs.readFile(settingsPath, "utf8"));
@@ -69,8 +72,8 @@ function normalizeBounds(value: unknown): WindowBounds | null {
   return {
     x: finiteNumber(input.x),
     y: finiteNumber(input.y),
-    width: Math.max(220, width),
-    height: Math.max(220, height),
+    width: Math.max(MIN_WINDOW_WIDTH, width),
+    height: Math.max(MIN_WINDOW_HEIGHT, height),
   };
 }
 

@@ -4,6 +4,9 @@
   "description": "OpenCode plugin that bridges realtime session status to Agent Pets.",
   "type": "module",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "src/opencode-server.mjs",
   "exports": {
     ".": "./src/opencode-server.mjs",

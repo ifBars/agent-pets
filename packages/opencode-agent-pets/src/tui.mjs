@@ -63,7 +63,7 @@ export async function toggleAgentPets(options = {}) {
   }
 
   const command = cleanString(options.command) || "bun";
-  const args = Array.isArray(options.args) ? options.args.map(String) : ["run", "pets", "--", "--provider", "opencode"];
+  const args = Array.isArray(options.args) ? options.args.map(String) : ["run", "agent-pets", "--", "--provider", "opencode"];
   const cwd = cleanString(options.cwd) || defaultRepoRoot();
   const child = spawn(command, args, {
     cwd,

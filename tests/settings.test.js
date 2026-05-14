@@ -22,7 +22,7 @@ describe("settings", () => {
     expect(settings.petSize).toBe(160);
     expect(settings.statusFile).toBe("status.json");
     expect(settings.windowBounds.width).toBe(220);
-    expect(settings.windowBounds.height).toBe(220);
+    expect(settings.windowBounds.height).toBe(460);
   });
 
   test("reads and updates settings file", async () => {

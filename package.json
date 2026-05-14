@@ -6,6 +6,9 @@
   "main": "build/src/main.js",
   "license": "MIT",
   "homepage": "https://github.com/ifBars/agent-pets#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "workspaces": [
     "packages/*"
   ],
@@ -20,19 +23,28 @@
     "name": "Agent Pets contributors",
     "email": "agent-pets@example.com"
   },
+  "keywords": [
+    "codex",
+    "desktop-pets",
+    "agent-status",
+    "electron",
+    "opencode"
+  ],
   "bin": {
     "agent-pets": "bin/agent-pets.cjs",
     "agent-pets-opencode-install": "bin/agent-pets-opencode-install.cjs",
     "agent-pets-emit": "bin/agent-pets-emit.cjs",
-    "agent-pets-validate": "bin/agent-pets-validate.cjs",
-    "pets": "bin/agent-pets.cjs"
+    "agent-pets-validate": "bin/agent-pets-validate.cjs"
   },
   "files": [
     "build/src/**/*",
     "bin/**/*",
     "packages/opencode-agent-pets/**/*",
     "skills/agent-pet-maker/**/*",
+    "media/agent-pets-preview.gif",
     "README.md",
+    "PET_CREATION.md",
+    "RELEASE.md",
     "LICENSE",
     "package.json"
   ],
@@ -40,7 +52,7 @@
     "prepack": "bun run build",
     "build": "node bin/build-runtime.cjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "pets": "bun run build && electron .",
+    "agent-pets": "bun run build && electron .",
     "list": "bun run build && electron . -- --list",
     "validate:pet": "bun run build && node bin/agent-pets-validate.cjs",
     "qa:pet": "bun run build && electron skills/agent-pet-maker/scripts/generate-pet-qa.cjs",
@@ -67,7 +79,10 @@
       "bin/**/*",
       "packages/opencode-agent-pets/**/*",
       "skills/agent-pet-maker/**/*",
+      "media/agent-pets-preview.gif",
       "README.md",
+      "PET_CREATION.md",
+      "RELEASE.md",
       "LICENSE",
       "package.json"
     ],
@@ -117,6 +132,9 @@
       "description": "Agent Pets mirrors local AI coding-agent activity through Codex-compatible desktop pets.",
       "maintainer": "Agent Pets contributors <agent-pets@example.com>"
     }
+  },
+  "optionalDependencies": {
+    "electron": "^39.2.4"
   },
   "devDependencies": {
     "@types/node": "^25.7.0",

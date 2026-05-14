@@ -141,8 +141,7 @@ function renderActivity(activity) {
   const active = activity.active;
   const sessions = activity.sessions || [];
   const isDesktop = activity.source === "desktop";
-  const activeCount = sessions.filter((session) => session.state && session.state !== "idle").length;
-  const badgeCount = activeCount || sessions.length || 0;
+  const badgeCount = sessions.filter(isBadgeSession).length;
   appElement.classList.toggle("desktop-mode", isDesktop);
   threadBadge.hidden = isDesktop;
   if (isDesktop && popoverOpen) setPopoverOpen(false);
@@ -227,6 +226,10 @@ function statusText(session) {
   if (normalized.startsWith("tool:")) return "Using a tool";
   if (normalized === "tool output") return "Tool finished";
   return labelForState(state);
+}
+
+function isBadgeSession(session) {
+  return session?.state === "running" || session?.state === "waiting" || session?.state === "failed";
 }
 
 function labelForSource(source) {
@@ -331,7 +334,6 @@ function setSettingsOpen(value) {
   settingsPopover.classList.toggle("is-open", settingsOpen);
   settingsPopover.setAttribute("aria-hidden", String(!settingsOpen));
   if (settingsOpen) positionPopover(settingsPopover);
-  else appElement.style.setProperty("--pet-shift", "0px");
 }
 
 function applyPetSize(value) {
@@ -384,20 +386,20 @@ function positionSettingsPopover() {
   const gap = 12;
   const width = settingsPopover.offsetWidth || 276;
   const naturalHeight = settingsPopover.scrollHeight || settingsPopover.offsetHeight || 96;
-  const maxHeight = Math.max(96, appRect.height - margin * 2);
-  const height = Math.min(naturalHeight, maxHeight);
   const basePetRect = layoutRectInApp(petElement);
+  const petClearanceTop = visualPetClearanceTop(basePetRect);
+  const availableAbove = Math.max(72, petClearanceTop - gap - margin);
+  const maxHeight = Math.min(naturalHeight, availableAbove);
+  const height = Math.min(naturalHeight, maxHeight);
   const left = clamp(basePetRect.left + basePetRect.width / 2 - width / 2, margin, appRect.width - width - margin);
-  const top = margin;
-  const requiredPetShift = Math.max(0, top + height + gap - basePetRect.top);
+  const top = Math.max(margin, petClearanceTop - height - gap);
 
   settingsPopover.style.left = `${Math.round(left)}px`;
-  settingsPopover.style.top = `${top}px`;
+  settingsPopover.style.top = `${Math.round(top)}px`;
   if (naturalHeight > maxHeight) {
     settingsPopover.style.maxHeight = `${Math.round(maxHeight)}px`;
     settingsPopover.style.overflowY = "auto";
   }
-  appElement.style.setProperty("--pet-shift", `${Math.round(requiredPetShift)}px`);
 }
 
 function positionThreadPopover() {
@@ -408,30 +410,42 @@ function positionThreadPopover() {
   const margin = 8;
   const gap = 12;
   const width = threadPopover.offsetWidth || 300;
-  const height = threadPopover.scrollHeight || threadPopover.offsetHeight || 96;
   const basePetRect = layoutRectInApp(petElement);
+  const petClearanceTop = visualPetClearanceTop(basePetRect);
+  const availableAbove = Math.max(0, petClearanceTop - gap - margin);
+  const height = fitThreadPopoverToAvailableHeight(availableAbove);
   const left = clamp(basePetRect.left + basePetRect.width / 2 - width / 2, margin, appRect.width - width - margin);
-  const top = Math.max(margin, basePetRect.top - height - gap);
+  const top = Math.max(margin, petClearanceTop - height - gap);
 
   threadPopover.style.left = `${Math.round(left)}px`;
   threadPopover.style.top = `${top}px`;
-  appElement.style.setProperty("--pet-shift", "0px");
+}
+
+function fitThreadPopoverToAvailableHeight(availableHeight) {
+  const items = Array.from(sessionList.children);
+  for (const item of items) item.hidden = false;
+
+  const measure = () => threadPopover.scrollHeight || threadPopover.offsetHeight || 96;
+  let height = measure();
+  for (let index = items.length - 1; index >= 0 && height > availableHeight; index -= 1) {
+    items[index].hidden = true;
+    height = measure();
+  }
+  return height;
+}
+
+function visualPetClearanceTop(rect) {
+  return rect.top;
 }
 
 function layoutRectInApp(element) {
-  let left = 0;
-  let top = 0;
-  let node = element;
-  while (node && node !== appElement) {
-    left += node.offsetLeft || 0;
-    top += node.offsetTop || 0;
-    node = node.offsetParent;
-  }
+  const appRect = appElement.getBoundingClientRect();
+  const rect = element.getBoundingClientRect();
   return {
-    left,
-    top,
-    width: element.offsetWidth,
-    height: element.offsetHeight,
+    left: rect.left - appRect.left,
+    top: rect.top - appRect.top,
+    width: rect.width,
+    height: rect.height,
   };
 }
 

@@ -1,165 +1,85 @@
 # Agent Pets
 
-![Agent Pets preview](media/agent-pets-preview.gif)
+<p align="center">
+  <img src="media/agent-pets-preview.gif" width="292" alt="Agent Pets preview" />
+</p>
 
 Bring your Codex pet anywhere.
 
-Agent Pets turns Codex-compatible pets into a tiny local desktop companion for coding agents, status files, or manual desktop-only use.
-
-- Local-first: reads local files and local agent state.
-- Provider-aware: Codex, OpenCode, Claude Code, T3Code, and generic status files.
-- Desktop-only mode: run any custom pet without connecting to an agent.
-- Codex-compatible: uses the same `pet.json` plus `spritesheet.webp` package shape.
+Agent Pets puts a tiny Codex-compatible pet on your desktop. It can show coding-agent status, run as a manual desktop companion, or follow a simple local status file.
 
 ## Quick Start
 
-Run from source:
-
 ```bash
 bun install
-bun run pets
+bun run agent-pets
 ```
 
 Run a specific pet:
 
 ```bash
-bun run pets -- --pet pingu
+bun run agent-pets -- --pet pingu
 ```
 
-Run a custom pet as a desktop-only companion:
+Use it without an agent:
 
 ```bash
-bun run pets -- --provider desktop --pet my-writing-buddy
-bun run pets -- --provider desktop --pet my-writing-buddy --state waving
+bun run agent-pets -- --provider desktop --pet pingu
+```
+
+After it is published to npm:
+
+```bash
+bunx agent-pets
 ```
 
 ## Agent Modes
 
-Codex is the default provider:
+Agent Pets supports:
+
+- Codex
+- OpenCode
+- Claude Code
+- T3Code
+- Desktop-only pets
+- JSON status files for custom integrations
+
+OpenCode realtime status and `/pet` support are available through the companion plugin:
 
 ```bash
-bun run pets
+bun run opencode:install-local
 ```
 
-OpenCode:
+Then run Agent Pets with OpenCode:
 
 ```bash
-bun run pets -- --provider opencode
+bun run agent-pets -- --provider opencode
 ```
 
-Install the OpenCode plugin if you want realtime OpenCode session status and `/pet` support:
+## Custom Pets
 
-```bash
-opencode plugin opencode-agent-pets --global
-```
+Pets use the Codex pet package shape: a `pet.json` manifest plus a transparent spritesheet.
 
-Claude Code and T3Code:
-
-```bash
-bun run pets -- --provider claude-code
-bun run pets -- --provider t3code
-```
-
-Generic status file:
-
-```bash
-bun run pets -- --status-file ./agent-status.json
-bun run emit -- --file ./agent-status.json --state running --title "Agent" --detail "Working"
-```
-
-Status file shape:
-
-```json
-{
-  "state": "running",
-  "title": "Agent",
-  "detail": "Working",
-  "updatedAt": "2026-05-13T10:00:00.000Z"
-}
-```
-
-Valid states are `idle`, `running`, `waiting`, `failed`, and `review`.
-
-## Make A Desktop Pet
-
-Desktop mode is for custom pets that are not tied to an agent. It is useful for writing, presenting, studying, streaming, or gaming.
-
-Create a Codex-compatible pet with the `agent-pet-maker` or `hatch-pet` skill workflow, then install it under:
-
-```text
-~/.codex/pets/<pet-id>/
-  pet.json
-  spritesheet.webp
-```
-
-Validate and QA the package:
-
-```bash
-bun run validate:pet -- ~/.codex/pets/my-writing-buddy
-bun run qa:pet -- --pet-dir ~/.codex/pets/my-writing-buddy --out ./my-writing-buddy-qa
-```
-
-Clean green or purple cutout halos before the final QA pass:
-
-```bash
-bun run clean:pet-edges -- --pet-dir ~/.codex/pets/my-writing-buddy --in-place
-bun run clean:pet-edges -- --pet-dir ~/.codex/pets/my-writing-buddy --fringe "#7a45ff" --in-place
-bun run clean:pet-edges -- --pet-dir ~/.codex/pets/my-writing-buddy --diagnostic-out ./my-writing-buddy-edges.png
-```
-
-Launch it:
-
-```bash
-bun run pets -- --provider desktop --pet my-writing-buddy
-```
-
-Desktop mode is manual in v1. It does not inspect active windows, browser tabs, document titles, or game process state.
-
-## Pet Package
-
-Manifest:
-
-```json
-{
-  "id": "pet-id",
-  "displayName": "Pet Name",
-  "description": "One short sentence.",
-  "spritesheetPath": "spritesheet.webp"
-}
-```
-
-Spritesheet contract:
-
-- PNG or WebP
-- `1536x1872`
-- `8x9` grid
-- `192x208` cells
-- transparent background
-- unused cells fully transparent
+Start here: [Make a Custom Pet](PET_CREATION.md)
 
 ## Development
 
 ```bash
-bun test
-bun run pets
+bun install
+bun run typecheck
+bun run test
 ```
 
-Package locally:
+Package a local desktop build:
 
 ```bash
 bun run pack
 ```
 
-Build release artifacts:
-
-```bash
-bun run dist:win
-bun run dist:mac
-bun run dist:linux
-```
+Release checklist: [RELEASE.md](RELEASE.md)
 
 ## Privacy
 
-Agent Pets is intentionally local-first. It does not patch Codex, inject into other apps, upload prompts, upload source code, or execute scripts from pet packages.
+Agent Pets is local-first. It does not patch Codex, inject into other apps, upload prompts, upload source code, or execute scripts from pet packages.
 
 See [PRIVACY.md](PRIVACY.md) and [SECURITY.md](SECURITY.md).
