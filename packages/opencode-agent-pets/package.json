@@ -1,0 +1,32 @@
+{
+  "name": "opencode-agent-pets",
+  "version": "0.1.0",
+  "description": "OpenCode plugin that bridges realtime session status to Agent Pets.",
+  "type": "module",
+  "license": "MIT",
+  "main": "src/opencode-server.mjs",
+  "exports": {
+    ".": "./src/opencode-server.mjs",
+    "./core": "./src/index.mjs",
+    "./tui": "./src/opencode-tui.mjs"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "package.json"
+  ],
+  "keywords": [
+    "opencode",
+    "plugin",
+    "agent-pets",
+    "desktop-pets"
+  ],
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.4.0"
+  },
+  "peerDependenciesMeta": {
+    "@opencode-ai/plugin": {
+      "optional": true
+    }
+  }
+}

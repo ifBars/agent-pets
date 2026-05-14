@@ -6,6 +6,9 @@
   "main": "src/main.cjs",
   "license": "MIT",
   "homepage": "https://github.com/ifBars/agent-pets#readme",
+  "workspaces": [
+    "packages/*"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/ifBars/agent-pets.git"
@@ -19,6 +22,7 @@
   },
   "bin": {
     "agent-pets": "bin/agent-pets.cjs",
+    "agent-pets-opencode-install": "bin/agent-pets-opencode-install.cjs",
     "agent-pets-emit": "bin/agent-pets-emit.cjs",
     "agent-pets-validate": "bin/agent-pets-validate.cjs",
     "pets": "bin/agent-pets.cjs"
@@ -27,13 +31,9 @@
     "pets": "electron .",
     "list": "electron . -- --list",
     "validate:pet": "node bin/agent-pets-validate.cjs",
-    "qa:pet": "electron scripts/generate-pet-qa.cjs",
+    "qa:pet": "electron skills/agent-pet-maker/scripts/generate-pet-qa.cjs",
     "emit": "node bin/agent-pets-emit.cjs",
-    "demo:status": "node scripts/demo-status.cjs",
-    "demo:screenshot": "electron scripts/capture-demo-screenshot.cjs",
-    "demo:video": "electron scripts/capture-demo-video.cjs",
-    "launch:kit": "node scripts/prepare-launch-kit.cjs",
-    "release:verify": "node scripts/verify-release.cjs",
+    "opencode:install-local": "node bin/agent-pets-opencode-install.cjs",
     "test": "bun test",
     "pack": "electron-builder --dir --publish never",
     "dist": "electron-builder --publish never",
@@ -52,12 +52,8 @@
     "files": [
       "src/**/*",
       "bin/**/*",
-      "scripts/demo-status.cjs",
-      "scripts/generate-pet-qa.cjs",
-      "scripts/capture-demo-screenshot.cjs",
-      "scripts/capture-demo-video.cjs",
-      "scripts/prepare-launch-kit.cjs",
-      "scripts/verify-release.cjs",
+      "packages/opencode-agent-pets/**/*",
+      "skills/agent-pet-maker/**/*",
       "README.md",
       "LICENSE",
       "package.json"

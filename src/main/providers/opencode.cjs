@@ -1,13 +1,18 @@
+const fs = require("node:fs/promises");
+const os = require("node:os");
+const path = require("node:path");
 const { aggregateActivity, cleanString, execJson, normalizeCommandSessions, normalizeState, timestampString } = require("./shared.cjs");
 const { mapActivityToPetState } = require("./codex.cjs");
 
 async function readOpenCodeActivity(options = {}) {
   const now = options.now || new Date();
   const runner = options.runner || runOpenCodeSessionList;
+  const bridgeSessions = await readOpenCodeBridgeSessions(options, now);
   try {
-    const sessions = normalizeSessions(await runner(options), now);
+    const sessions = mergeOpenCodeSessions(bridgeSessions, normalizeSessions(await runner(options), now));
     return aggregateActivity("opencode", sessions, now);
   } catch (error) {
+    if (bridgeSessions.length > 0) return aggregateActivity("opencode", bridgeSessions, now);
     return aggregateActivity("opencode", [], now, { error: error.message });
   }
 }
@@ -57,6 +62,78 @@ function normalizeSessions(output, now = new Date()) {
       .slice(0, 8);
   }
   return normalizeCommandSessions(output, "opencode", now);
+}
+
+async function readOpenCodeBridgeSessions(options = {}, now = new Date()) {
+  const bridgeFile = cleanString(options.bridgeFile) || cleanString(process.env.AGENT_PETS_OPENCODE_STATUS_FILE) || getDefaultOpenCodeBridgeFile();
+  try {
+    const parsed = JSON.parse(await fs.readFile(bridgeFile, "utf8"));
+    return normalizeOpenCodeBridgeSessions(parsed, now);
+  } catch {
+    return [];
+  }
+}
+
+function getDefaultOpenCodeBridgeFile() {
+  if (process.platform === "win32") {
+    const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local");
+    return path.join(localAppData, "Agent Pets", "providers", "opencode.json");
+  }
+  const stateHome = process.env.XDG_STATE_HOME || path.join(os.homedir(), ".local", "state");
+  return path.join(stateHome, "agent-pets", "providers", "opencode.json");
+}
+
+function normalizeOpenCodeBridgeSessions(payload, now = new Date()) {
+  if (!payload || typeof payload !== "object") return [];
+  const rows = Array.isArray(payload.sessions) ? payload.sessions : Array.isArray(payload.items) ? payload.items : [];
+  return rows
+    .map((item, index) => normalizeOpenCodeBridgeSession(item, index, now))
+    .filter(Boolean)
+    .sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime())
+    .slice(0, 8);
+}
+
+function normalizeOpenCodeBridgeSession(item, index, now) {
+  if (!item || typeof item !== "object") return null;
+  const updatedAt = cleanString(item.updatedAt) || now.toISOString();
+  const state = normalizeBridgeState(item.state, updatedAt, now);
+  const detail = cleanString(item.detail) || cleanString(item.latestEvent) || "OpenCode plugin activity";
+  return {
+    id: cleanString(item.id) || cleanString(item.sessionID) || cleanString(item.sessionId) || `opencode-plugin-${index}`,
+    title: cleanString(item.title) || cleanString(item.cwd) || `OpenCode session ${index + 1}`,
+    detail,
+    state,
+    petState: mapActivityToPetState(state),
+    updatedAt,
+    latestEvent: detail,
+    directory: cleanString(item.cwd) || cleanString(item.directory),
+    projectId: cleanString(item.projectId) || cleanString(item.project_id),
+    source: "opencode-plugin",
+  };
+}
+
+function normalizeBridgeState(value, updatedAt, now) {
+  const state = cleanString(value)?.toLowerCase() || "";
+  if (state === "running" || state === "waiting") {
+    const ageMs = now.getTime() - new Date(updatedAt).getTime();
+    if (Number.isFinite(ageMs) && ageMs > 30 * 60 * 1000) return "idle";
+    if (Number.isFinite(ageMs) && ageMs > 5 * 60 * 1000) return "review";
+    return state;
+  }
+  return normalizeState(state, updatedAt, now);
+}
+
+function mergeOpenCodeSessions(preferredSessions, fallbackSessions) {
+  const merged = [];
+  const seen = new Set();
+  for (const session of [...preferredSessions, ...fallbackSessions]) {
+    if (!session || seen.has(session.id)) continue;
+    seen.add(session.id);
+    merged.push(session);
+  }
+  return merged
+    .sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime())
+    .slice(0, 8);
 }
 
 function normalizeDbSession(item, index, now) {
@@ -115,9 +192,13 @@ function parseJson(value) {
 
 module.exports = {
   classifyOpenCodeState,
+  getDefaultOpenCodeBridgeFile,
+  mergeOpenCodeSessions,
   normalizeDbSession,
+  normalizeOpenCodeBridgeSessions,
   normalizeSessions,
   readOpenCodeActivity,
+  readOpenCodeBridgeSessions,
   runOpenCodeDbSessionList,
   runOpenCodeSessionList,
 };

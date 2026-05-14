@@ -1,5 +1,5 @@
 const { describe, expect, test } = require("bun:test");
-const { buildReview, parseArgs, ROWS } = require("../scripts/generate-pet-qa.cjs");
+const { buildReview, parseArgs, ROWS } = require("../skills/agent-pet-maker/scripts/generate-pet-qa.cjs");
 
 describe("pet QA script", () => {
   test("parses pet qa args", () => {

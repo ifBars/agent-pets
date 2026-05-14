@@ -101,11 +101,11 @@ body,
 .thread-popover,
 .settings-popover {
   position: absolute;
-  right: 16px;
-  top: 14px;
-  width: min(308px, calc(100vw - 32px));
+  left: 50%;
+  top: 8px;
+  width: min(276px, calc(100vw - 24px));
   max-height: calc(100vh - 36px);
-  padding: 10px;
+  padding: 9px 10px;
   box-sizing: border-box;
   border: 1px solid rgb(255 255 255 / 0.16);
   border-radius: 8px;
@@ -114,8 +114,8 @@ body,
   backdrop-filter: blur(14px);
   opacity: 0;
   pointer-events: none;
-  transform: translateY(-7px) scale(0.985);
-  transform-origin: top right;
+  transform: translateY(8px) scale(0.985);
+  transform-origin: bottom center;
   visibility: hidden;
   transition:
     opacity 150ms ease,
@@ -126,7 +126,6 @@ body,
 
 .settings-popover {
   width: min(276px, calc(100vw - 32px));
-  right: 46px;
 }
 
 .thread-popover.is-open,
@@ -145,7 +144,7 @@ body,
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
-  gap: 10px;
+  gap: 8px;
 }
 
 .eyebrow {
@@ -169,15 +168,22 @@ h1 {
 }
 
 .detail {
-  margin: 7px 0 0;
-  color: rgb(197 203 200);
+  margin: 5px 0 0;
+  color: rgb(166 174 171);
   font-size: 11px;
-  line-height: 1.35;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail[hidden] {
+  display: none;
 }
 
 .status-pill {
-  min-width: 56px;
-  padding: 5px 8px;
+  min-width: 50px;
+  padding: 4px 8px;
   border: 1px solid rgb(255 255 255 / 0.16);
   border-radius: 999px;
   color: rgb(229 236 232);
@@ -213,8 +219,8 @@ h1 {
 
 .session-list {
   display: grid;
-  gap: 4px;
-  margin: 9px 0 0;
+  gap: 2px;
+  margin: 8px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -224,7 +230,7 @@ h1 {
   grid-template-columns: 7px minmax(0, 1fr) auto;
   align-items: center;
   gap: 7px;
-  min-height: 23px;
+  min-height: 21px;
   color: rgb(218 222 220);
   font-size: 11px;
 }

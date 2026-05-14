@@ -3,6 +3,8 @@ dist/
 out/
 .demo/
 .release-artifacts/
+/docs/
+/scripts/
 *.log
 .DS_Store
 Thumbs.db

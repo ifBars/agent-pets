@@ -1,5 +1,8 @@
 const { describe, expect, test } = require("bun:test");
 const { normalizeSessions, readOpenCodeActivity } = require("../src/main/providers/opencode.cjs");
+const fs = require("node:fs/promises");
+const os = require("node:os");
+const path = require("node:path");
 
 describe("opencode activity provider", () => {
   test("normalizes opencode session list json into pet activity", () => {
@@ -88,5 +91,46 @@ describe("opencode activity provider", () => {
     expect(activity.state).toBe("idle");
     expect(activity.sessions).toHaveLength(0);
     expect(activity.active).toBeNull();
+  });
+
+  test("prefers realtime plugin bridge sessions over stale database state", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "agent-pets-opencode-"));
+    const bridgeFile = path.join(dir, "opencode.json");
+    await fs.writeFile(
+      bridgeFile,
+      JSON.stringify({
+        provider: "opencode",
+        updatedAt: "2026-05-13T10:19:59.000Z",
+        sessions: [
+          {
+            id: "oc-live",
+            title: "Live OpenCode run",
+            cwd: "C:\\Users\\ghost\\project",
+            state: "review",
+            detail: "session idle",
+            updatedAt: "2026-05-13T10:19:59.000Z",
+          },
+        ],
+      }),
+    );
+
+    const activity = await readOpenCodeActivity({
+      now: new Date("2026-05-13T10:20:00.000Z"),
+      bridgeFile,
+      runner: async () => [
+        {
+          id: "oc-live",
+          title: "Live OpenCode run",
+          time_updated: new Date("2026-05-13T10:19:30.000Z").getTime(),
+          message_data: JSON.stringify({ role: "assistant" }),
+          part_data: JSON.stringify({ type: "text" }),
+        },
+      ],
+    });
+
+    expect(activity.state).toBe("review");
+    expect(activity.active.latestEvent).toBe("session idle");
+    expect(activity.active.source).toBe("opencode-plugin");
+    expect(activity.sessions).toHaveLength(1);
   });
 });

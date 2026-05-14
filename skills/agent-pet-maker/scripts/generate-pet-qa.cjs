@@ -2,7 +2,7 @@ const { app, BrowserWindow } = require("electron");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
-const { validatePetPackage } = require("../src/main/validate-pet.cjs");
+const { validatePetPackage } = require("../../../src/main/validate-pet.cjs");
 
 const ROWS = [
   { row: 0, state: "idle", frames: 6 },
@@ -23,7 +23,7 @@ const SCALE = 0.28;
 async function main(argv = process.argv.slice(2)) {
   const args = parseArgs(argv);
   if (!args.petDir) {
-    console.error("Usage: electron scripts/generate-pet-qa.cjs --pet-dir <path> [--out docs/demo/pet-qa]");
+    console.error("Usage: electron skills/agent-pet-maker/scripts/generate-pet-qa.cjs --pet-dir <path> [--out <qa-output>]");
     app.exit(2);
     return;
   }

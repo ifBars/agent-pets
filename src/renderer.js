@@ -140,19 +140,20 @@ function renderActivity(activity) {
   const sessions = activity.sessions || [];
   const activeCount = sessions.filter((session) => session.state && session.state !== "idle").length;
   const badgeCount = activeCount || sessions.length || 0;
-  sourceLabel.textContent = `${labelForSource(activity.source)} monitor`;
+  sourceLabel.textContent = labelForSource(activity.source);
   threadBadge.textContent = String(Math.min(99, badgeCount));
   threadBadge.className = `thread-badge ${activity.state || "idle"}`;
   threadBadge.title = `${badgeCount} ${badgeCount === 1 ? "thread" : "threads"}`;
   activeTitle.textContent = active?.title || `No ${labelForSource(activity.source)} sessions found`;
-  activeDetail.textContent = active
-    ? `${labelForState(active.state)} - ${active.latestEvent || "session activity"}`
-    : `Create or open a ${labelForSource(activity.source)} thread and the pet will react here.`;
   statusPill.textContent = labelForState(activity.state);
   statusPill.className = `status-pill ${activity.state || "idle"}`;
 
   sessionList.textContent = "";
-  for (const session of sessions.slice(0, 5)) {
+  const visibleSessions = sessions.filter((session) => !active || session.id !== active.id).slice(0, 3);
+  const summary = summarizeActivity(active, visibleSessions.length, activity.source);
+  activeDetail.hidden = !summary;
+  activeDetail.textContent = summary;
+  for (const session of visibleSessions) {
     const item = document.createElement("li");
     item.className = "session-item";
 
@@ -172,6 +173,12 @@ function renderActivity(activity) {
 
     sessionList.append(item);
   }
+  if (popoverOpen) positionPopover(threadPopover);
+}
+
+function summarizeActivity(active, otherCount, source) {
+  if (!active) return `No active ${labelForSource(source)} activity`;
+  return otherCount > 0 ? `${otherCount} more ${otherCount === 1 ? "session" : "sessions"}` : "";
 }
 
 function labelForSource(source) {
@@ -201,7 +208,8 @@ function relativeTime(value) {
   const minutes = Math.max(0, Math.round(deltaMs / 60000));
   if (minutes < 1) return "now";
   if (minutes < 60) return `${minutes}m`;
-  return `${Math.round(minutes / 60)}h`;
+  if (minutes < 1440) return `${Math.round(minutes / 60)}h`;
+  return `${Math.round(minutes / 1440)}d`;
 }
 
 async function boot() {
@@ -241,6 +249,7 @@ function setPopoverOpen(value) {
   if (popoverOpen) setSettingsOpen(false);
   threadPopover.classList.toggle("is-open", popoverOpen);
   threadPopover.setAttribute("aria-hidden", String(!popoverOpen));
+  if (popoverOpen) positionPopover(threadPopover);
 }
 
 function setSettingsOpen(value) {
@@ -248,12 +257,27 @@ function setSettingsOpen(value) {
   if (settingsOpen) setPopoverOpen(false);
   settingsPopover.classList.toggle("is-open", settingsOpen);
   settingsPopover.setAttribute("aria-hidden", String(!settingsOpen));
+  if (settingsOpen) positionPopover(settingsPopover);
 }
 
 function applyPetSize(value) {
   petSize = Math.min(160, Math.max(72, Math.round(Number(value) || 112)));
   document.getElementById("app").style.setProperty("--pet-size", `${petSize}px`);
   petSizeInput.value = String(petSize);
+  if (popoverOpen) positionPopover(threadPopover);
+  if (settingsOpen) positionPopover(settingsPopover);
+}
+
+function positionPopover(popover) {
+  const appRect = document.getElementById("app").getBoundingClientRect();
+  const petRect = petElement.getBoundingClientRect();
+  const width = popover.offsetWidth || 276;
+  const height = popover.offsetHeight || 96;
+  const gap = 8;
+  const left = Math.min(appRect.width - width - 8, Math.max(8, petRect.left + petRect.width / 2 - width / 2));
+  const top = Math.max(8, petRect.top - height - gap);
+  popover.style.left = `${Math.round(left)}px`;
+  popover.style.top = `${Math.round(top)}px`;
 }
 
 function updateProviderControls() {
@@ -289,6 +313,10 @@ document.addEventListener("keydown", (event) => {
   }
 });
 window.addEventListener("focus", () => refreshActivity().catch(console.error));
+window.addEventListener("resize", () => {
+  if (popoverOpen) positionPopover(threadPopover);
+  if (settingsOpen) positionPopover(settingsPopover);
+});
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) refreshActivity().catch(console.error);
 });

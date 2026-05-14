@@ -4,8 +4,6 @@ Agent Pets brings Codex-compatible pets outside of Codex and turns them into a s
 
 The first target is Codex Desktop: the app reads local Codex pet packages and local session files, then maps agent activity into the same pet states Codex uses: `running`, `waiting`, `failed`, `review`, and `idle`. The product direction is not "another chatbot" and not a pure nostalgia desktop toy. It is an ambient status layer for long-running agent work.
 
-![Agent Pets demo](docs/demo/agent-pets-demo.png)
-
 ## Quick Start
 
 Download packaged builds from [GitHub Releases](https://github.com/ifBars/agent-pets/releases), or run from source:
@@ -30,7 +28,7 @@ bun run validate:pet -- C:\Users\ghost\.codex\pets\pingu
 Generate a contact sheet and QA report:
 
 ```bash
-bun run qa:pet -- --pet-dir C:\Users\ghost\.codex\pets\pingu --out docs\demo\pingu-qa
+bun run qa:pet -- --pet-dir C:\Users\ghost\.codex\pets\pingu --out .demo\pingu-qa
 ```
 
 Use a generic status file for another agent:
@@ -39,10 +37,16 @@ Use a generic status file for another agent:
 bun run pets -- --status-file C:\path\to\agent-status.json
 ```
 
-Monitor OpenCode through its CLI session list:
+Monitor OpenCode through the native Agent Pets OpenCode plugin when installed, with CLI session data as a fallback:
 
 ```bash
 bun run pets -- --provider opencode
+```
+
+Install the OpenCode bridge plugin:
+
+```bash
+opencode plugin opencode-agent-pets --global
 ```
 
 Monitor Claude Code local sessions:
@@ -63,37 +67,6 @@ Emit a status update from another agent or task wrapper:
 bun run emit -- --file C:\path\to\agent-status.json --state running --title "Claude Code" --detail "Editing files"
 ```
 
-Run a controlled status loop for recording a demo:
-
-```bash
-bun run demo:status
-bun run pets -- --status-file .demo\agent-status.json
-```
-
-Generate a renderer screenshot for a README or X post:
-
-```bash
-bun run demo:screenshot
-```
-
-Generate a short MP4 from the actual renderer:
-
-```bash
-bun run demo:video
-```
-
-Verify release-ready local artifacts:
-
-```bash
-bun run release:verify
-```
-
-Prepare the X/demo launch kit:
-
-```bash
-bun run launch:kit
-```
-
 The package also exposes command bins for future publishing:
 
 ```bash
@@ -107,7 +80,7 @@ pets
 - Validates the Codex pet atlas contract before loading a pet: WebP or PNG, `1536x1872`, `8x9`, `192x208` cells.
 - Runs as a transparent, frameless, always-on-top Electron desktop pet.
 - Reads local Codex session metadata and recent rollout JSONL records.
-- Reads OpenCode session summaries through `opencode session list --format json`.
+- Reads realtime OpenCode session state from the `opencode-agent-pets` plugin, then falls back to OpenCode CLI/database summaries.
 - Reads Claude Code local session JSONL metadata without exposing prompt text.
 - Reads T3Code command-session summaries when a compatible CLI is installed.
 - Reads a generic JSON status file for non-Codex agents.
@@ -121,10 +94,6 @@ pets
 ## Why It Exists
 
 Desktop pets are memorable but usually impractical. AI desktop companions are practical but usually become full chat clients. Agent Pets takes a narrower wedge: make coding-agent state visible at the edge of your workspace with the pet assets people already make for Codex.
-
-See [docs/market-research.md](docs/market-research.md), [docs/product-spec.md](docs/product-spec.md), and [docs/architecture.md](docs/architecture.md).
-
-Current completion status is tracked in [docs/completion-audit.md](docs/completion-audit.md).
 
 ## Pet Contract
 
@@ -200,14 +169,4 @@ The current implementation is intentionally local-first. It does not patch Codex
 
 The demo should show a Codex pet leaving Codex, landing on the desktop, and reacting while Codex works in the background. The payoff is practical: "I can see when my agent is running, waiting on me, failed, or ready for review without opening the app."
 
-See [docs/demo-script.md](docs/demo-script.md).
-
-Release and launch notes:
-
-- [docs/release-checklist.md](docs/release-checklist.md)
-- [docs/x-launch-post.md](docs/x-launch-post.md)
-- [docs/adapters/opencode.md](docs/adapters/opencode.md)
-- [docs/adapters/claude-code.md](docs/adapters/claude-code.md)
-- [docs/adapters/t3code.md](docs/adapters/t3code.md)
-- [PRIVACY.md](PRIVACY.md)
-- [SECURITY.md](SECURITY.md)
+See [PRIVACY.md](PRIVACY.md) and [SECURITY.md](SECURITY.md).

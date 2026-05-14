@@ -105,7 +105,7 @@ Passing validation only proves the manifest path and atlas dimensions are struct
 Generate contact-sheet QA:
 
 ```bash
-bun run qa:pet -- --pet-dir C:\path\to\pet-folder --out C:\path\to\qa-output
+electron skills/agent-pet-maker/scripts/generate-pet-qa.cjs --pet-dir C:\path\to\pet-folder --out C:\path\to\qa-output
 ```
 
 Open `contact-sheet.png` and inspect every row before accepting the pet.
