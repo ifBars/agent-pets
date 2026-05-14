@@ -10,6 +10,8 @@ describe("package metadata", () => {
     expect(manifest.private).toBe(false);
     expect(manifest.bin["agent-pets"]).toBe("bin/agent-pets.cjs");
     expect(manifest.bin.pets).toBeUndefined();
+    expect(manifest.build.deb.packageName).toBe("agent-pets");
+    expect(manifest.build.deb.artifactName).not.toContain("/");
     expect(manifest.scripts["agent-pets"]).toContain("electron .");
     expect(manifest.scripts.pets).toBeUndefined();
   });
