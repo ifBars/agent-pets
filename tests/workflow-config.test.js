@@ -37,6 +37,9 @@ describe("workflow config", () => {
     expect(workflow).toContain("if: needs.prepare.outputs.should_release == 'true' && github.event_name == 'release'");
     expect(workflow).toContain("name: Publish npm packages from generated release");
     expect(workflow).toContain("needs.prepare.outputs.release_exists == 'true' || needs.github-release.result == 'success'");
+    expect(workflow).toContain("continue-on-error: true");
+    expect(workflow).toContain("name: Check npm publish results");
+    expect(workflow).toContain("opencode-agent-pets publish failed.");
     expect(workflow).toContain("bun publish --access public");
     expect(workflow).toContain("working-directory: packages/opencode-agent-pets");
     expect(workflow).toContain("NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}");

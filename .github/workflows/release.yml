@@ -242,6 +242,7 @@ jobs:
           fi
 
       - name: Publish OpenCode plugin
+        if: always()
         working-directory: packages/opencode-agent-pets
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -286,6 +287,8 @@ jobs:
         run: bun run test
 
       - name: Publish Agent Pets
+        id: publish_agent_pets
+        continue-on-error: true
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -299,6 +302,8 @@ jobs:
           fi
 
       - name: Publish OpenCode plugin
+        id: publish_opencode_agent_pets
+        continue-on-error: true
         working-directory: packages/opencode-agent-pets
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -310,4 +315,18 @@ jobs:
             echo "opencode-agent-pets@${version} is already published; skipping."
           else
             bun publish --access public
+          fi
+
+      - name: Check npm publish results
+        run: |
+          set -euo pipefail
+
+          if [ "${{ steps.publish_agent_pets.outcome }}" != "success" ]; then
+            echo "agent-pets publish failed."
+            exit 1
+          fi
+
+          if [ "${{ steps.publish_opencode_agent_pets.outcome }}" != "success" ]; then
+            echo "opencode-agent-pets publish failed."
+            exit 1
           fi
