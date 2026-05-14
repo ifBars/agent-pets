@@ -36,10 +36,25 @@ body {
   transform: translateX(-50%);
   cursor: grab;
   pointer-events: auto;
-  -webkit-app-region: drag;
+  -webkit-app-region: no-drag;
+}
+
+.pet-stage,
+.pet-stage * {
+  cursor: grab;
 }
 
 .pet-stage:active {
+  cursor: grabbing;
+}
+
+.pet-stage:active,
+.pet-stage:active * {
+  cursor: grabbing;
+}
+
+.pet-stage.is-dragging,
+.pet-stage.is-dragging * {
   cursor: grabbing;
 }
 

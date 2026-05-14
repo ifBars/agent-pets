@@ -15,6 +15,8 @@ describe("renderer layout", () => {
   test("pet is visibly draggable and thread cards stay compact", () => {
     const css = fs.readFileSync(path.join(__dirname, "..", "src", "renderer.css"), "utf8");
     const main = fs.readFileSync(path.join(__dirname, "..", "src", "main.ts"), "utf8");
+    const preload = fs.readFileSync(path.join(__dirname, "..", "src", "preload.ts"), "utf8");
+    const renderer = fs.readFileSync(path.join(__dirname, "..", "src", "renderer.js"), "utf8");
 
     expect(css).toContain("bottom: 36px");
     expect(css).toContain("transform: translateX(-50%)");
@@ -22,6 +24,12 @@ describe("renderer layout", () => {
     expect(main).toContain("minHeight: 460");
     expect(css).toContain("cursor: grab");
     expect(css).toContain("cursor: grabbing");
+    expect(css).toContain("-webkit-app-region: no-drag");
+    expect(css).not.toContain("-webkit-app-region: drag");
+    expect(renderer).toContain("beginPetDrag");
+    expect(renderer).toContain("moveWindowBy(deltaX, deltaY)");
+    expect(preload).toContain("moveWindowBy");
+    expect(main).toContain('ipcMain.on("window:move-by"');
     expect(css).toContain("width: min(300px, calc(100vw - 24px))");
     expect(css).toContain("min-height: 34px");
   });

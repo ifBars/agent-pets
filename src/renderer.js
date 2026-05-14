@@ -40,8 +40,12 @@ let settingsOpen = false;
 let refreshInFlight = false;
 let refreshQueued = false;
 let ignoringMouseEvents = null;
+let petDragging = false;
+let lastDragScreenX = 0;
+let lastDragScreenY = 0;
 
 const petElement = document.getElementById("pet");
+const petStage = document.querySelector(".pet-stage");
 const threadBadge = document.getElementById("threadBadge");
 const threadPopover = document.getElementById("threadPopover");
 const settingsButton = document.getElementById("settingsButton");
@@ -315,7 +319,37 @@ function isInteractivePoint(event) {
 }
 
 function updateMousePassthrough(event) {
+  if (petDragging) {
+    setWindowMousePassthrough(false);
+    return;
+  }
   setWindowMousePassthrough(!isInteractivePoint(event));
+}
+
+function beginPetDrag(event) {
+  if (event.button !== 0) return;
+  petDragging = true;
+  lastDragScreenX = event.screenX;
+  lastDragScreenY = event.screenY;
+  petStage.classList.add("is-dragging");
+  setWindowMousePassthrough(false);
+  event.preventDefault();
+}
+
+function updatePetDrag(event) {
+  if (!petDragging) return;
+  const deltaX = event.screenX - lastDragScreenX;
+  const deltaY = event.screenY - lastDragScreenY;
+  lastDragScreenX = event.screenX;
+  lastDragScreenY = event.screenY;
+  if (deltaX || deltaY) window.codexPets.moveWindowBy(deltaX, deltaY);
+}
+
+function endPetDrag(event) {
+  if (!petDragging) return;
+  petDragging = false;
+  petStage.classList.remove("is-dragging");
+  updateMousePassthrough(event);
 }
 
 function setPopoverOpen(value) {
@@ -501,12 +535,20 @@ statusFileInput.addEventListener("change", () => {
   refreshActivity().catch(console.error);
 });
 petElement.addEventListener("dblclick", () => setState("waving"));
+petStage.addEventListener("mousedown", beginPetDrag);
 threadBadge.addEventListener("click", () => setPopoverOpen(!popoverOpen));
 settingsButton.addEventListener("click", () => setSettingsOpen(!settingsOpen));
-window.addEventListener("mousemove", updateMousePassthrough);
-window.addEventListener("mouseleave", () => setWindowMousePassthrough(true));
+window.addEventListener("mousemove", (event) => {
+  updatePetDrag(event);
+  updateMousePassthrough(event);
+});
+window.addEventListener("mouseleave", () => {
+  petDragging = false;
+  petStage.classList.remove("is-dragging");
+  setWindowMousePassthrough(true);
+});
 window.addEventListener("mousedown", () => setWindowMousePassthrough(false));
-window.addEventListener("mouseup", (event) => updateMousePassthrough(event));
+window.addEventListener("mouseup", endPetDrag);
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     setPopoverOpen(false);

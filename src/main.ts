@@ -165,6 +165,12 @@ export function registerIpcHandlers(): void {
     if (!win || win.isDestroyed()) return;
     win.setIgnoreMouseEvents(Boolean(ignore), ignore ? options : undefined);
   });
+  ipcMain.on("window:move-by", (event, deltaX: number, deltaY: number) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win || win.isDestroyed()) return;
+    const [x, y] = win.getPosition();
+    win.setPosition(Math.round(x + Number(deltaX || 0)), Math.round(y + Number(deltaY || 0)), false);
+  });
 }
 
 if (process.versions.electron && (process as any).type === "browser") {
