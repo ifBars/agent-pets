@@ -30,6 +30,8 @@ describe("workflow config", () => {
     expect(workflow).toContain("gh release create");
     expect(workflow).toContain("find release-artifacts -type f -print0");
     expect(workflow).toContain('"${release_files[@]}"');
+    expect(workflow).toContain("dist/*.exe");
+    expect(workflow).not.toContain("dist/**/*.exe");
     expect(workflow).toContain('--target "${GITHUB_SHA}"');
     expect(workflow).toContain("name: Publish npm packages from GitHub release");
     expect(workflow).toContain("if: needs.prepare.outputs.should_release == 'true' && github.event_name == 'release'");

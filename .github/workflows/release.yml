@@ -156,15 +156,15 @@ jobs:
         with:
           name: agent-pets-${{ runner.os }}
           path: |
-            dist/**/*.exe
-            dist/**/*.msi
-            dist/**/*.dmg
-            dist/**/*.zip
-            dist/**/*.AppImage
-            dist/**/*.deb
-            dist/**/*.rpm
-            dist/**/*.blockmap
-            dist/**/latest*.yml
+            dist/*.exe
+            dist/*.msi
+            dist/*.dmg
+            dist/*.zip
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.rpm
+            dist/*.blockmap
+            dist/latest*.yml
           if-no-files-found: error
 
   github-release:
