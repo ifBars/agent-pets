@@ -174,7 +174,16 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ needs.prepare.outputs.tag }}" release-artifacts/* --generate-notes --title "${{ needs.prepare.outputs.tag }}" --target "${GITHUB_SHA}"
+        run: |
+          set -euo pipefail
+          mapfile -d "" release_files < <(find release-artifacts -type f -print0)
+
+          if [ "${#release_files[@]}" -eq 0 ]; then
+            echo "No release artifact files found."
+            exit 1
+          fi
+
+          gh release create "${{ needs.prepare.outputs.tag }}" "${release_files[@]}" --generate-notes --title "${{ needs.prepare.outputs.tag }}" --target "${GITHUB_SHA}"
 
   npm-publish:
     name: Publish npm packages from GitHub release
