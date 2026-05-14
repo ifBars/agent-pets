@@ -147,6 +147,50 @@ describe("codex activity provider", () => {
     expect(session.state).toBe("running");
   });
 
+  test("treats task_started after completion as running before user message arrives", () => {
+    const now = new Date("2026-05-13T10:00:00.000Z");
+    const session = classifySession(
+      { id: "s-task-started", thread_name: "Started", updated_at: "2026-05-13T09:59:59.000Z" },
+      "session.jsonl",
+      {
+        mtimeMs: now.getTime() - 1_000,
+        records: [
+          { payload: { type: "task_complete" } },
+          { payload: { type: "task_started" } },
+          { payload: { type: "message", role: "developer", content: [{ type: "input_text", text: "request_user_input is available as a tool" }] } },
+        ],
+      },
+      now,
+    );
+
+    expect(session.state).toBe("running");
+  });
+
+  test("only marks needs input for actual request_user_input tool calls", () => {
+    const now = new Date("2026-05-13T10:00:00.000Z");
+    const falsePositive = classifySession(
+      { id: "s-input-text", thread_name: "Text mentions input", updated_at: "2026-05-13T09:59:59.000Z" },
+      "session.jsonl",
+      {
+        mtimeMs: now.getTime() - 1_000,
+        records: [{ payload: { type: "message", role: "developer", content: "request_user_input is available" } }],
+      },
+      now,
+    );
+    const realInputRequest = classifySession(
+      { id: "s-input-call", thread_name: "Input call", updated_at: "2026-05-13T09:59:59.000Z" },
+      "session.jsonl",
+      {
+        mtimeMs: now.getTime() - 1_000,
+        records: [{ payload: { type: "function_call", name: "request_user_input", call_id: "call_input" } }],
+      },
+      now,
+    );
+
+    expect(falsePositive.state).not.toBe("waiting");
+    expect(realInputRequest.state).toBe("waiting");
+  });
+
   test("treats reasoning after a previous completion as active work", () => {
     const now = new Date("2026-05-13T10:00:00.000Z");
     const session = classifySession(

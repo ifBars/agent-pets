@@ -192,7 +192,7 @@ export function classifySession(entry: any, sessionPath: string | null, sample: 
   const stickyCompleted = hasStickyCompletion(records);
   const pendingToolCall = !stickyCompleted && hasPendingToolCall(records);
   const recentlyActive = !stickyCompleted && lastWriteAgeMs <= ACTIVE_WINDOW_MS && hasRecentActivePayload(records);
-  const requestedInput = latestPayload?.name === "request_user_input" || JSON.stringify(latestPayload || {}).includes("request_user_input");
+  const requestedInput = isRequestUserInputPayload(latestPayload);
   const failed = isFailurePayload(latestPayload);
   const completed = isCompletionPayload(latestPayload);
 
@@ -253,6 +253,7 @@ function findLatestCompletionIndex(records: any[]): number {
 function isWorkStartRecord(record: any): boolean {
   const payload = record?.payload;
   if (!payload || typeof payload !== "object") return false;
+  if (payload.type === "task_started") return true;
   if (payload.type === "function_call" || payload.type === "custom_tool_call") return true;
   if (payload.type === "reasoning") return true;
   if (payload.type === "agent_message" && payload.phase === "commentary") return true;
@@ -283,7 +284,15 @@ function findLatestPayload(records: any[]): any | null {
 
 function isPassivePayload(payload: any): boolean {
   if (!payload || typeof payload !== "object") return false;
-  return payload.type === "token_count";
+  if (payload.type === "token_count") return true;
+  if (payload.type === "message" && (payload.role === "developer" || payload.role === "system")) return true;
+  return false;
+}
+
+function isRequestUserInputPayload(payload: any): boolean {
+  if (!payload || typeof payload !== "object") return false;
+  if (payload.type !== "function_call" && payload.type !== "custom_tool_call") return false;
+  return payload.name === "request_user_input";
 }
 
 function summarizePayload(payload: any): string | null {
@@ -377,6 +386,7 @@ export function isReviewPayload(payload: any): boolean {
 
 function isActiveWorkPayload(payload: any): boolean {
   if (!payload || typeof payload !== "object") return false;
+  if (payload.type === "task_started") return true;
   if (payload.type === "function_call") return true;
   if (payload.type === "custom_tool_call") return true;
   if (payload.type === "function_call_output") return true;
