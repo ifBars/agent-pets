@@ -4,6 +4,15 @@
   "description": "OpenCode plugin that bridges realtime session status to Agent Pets.",
   "type": "module",
   "license": "MIT",
+  "homepage": "https://github.com/ifBars/agent-pets#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ifBars/agent-pets.git",
+    "directory": "packages/opencode-agent-pets"
+  },
+  "bugs": {
+    "url": "https://github.com/ifBars/agent-pets/issues"
+  },
   "publishConfig": {
     "access": "public"
   },

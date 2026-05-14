@@ -33,6 +33,9 @@ describe("package metadata", () => {
     expect(manifest.name).toBe("opencode-agent-pets");
     expect(manifest.private).not.toBe(true);
     expect(manifest.publishConfig).toEqual({ access: "public" });
+    expect(manifest.repository.url).toBe("https://github.com/ifBars/agent-pets.git");
+    expect(manifest.repository.directory).toBe("packages/opencode-agent-pets");
+    expect(manifest.bugs.url).toBe("https://github.com/ifBars/agent-pets/issues");
     expect(manifest.files).toContain("src");
   });
 });

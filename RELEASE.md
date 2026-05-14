@@ -1,26 +1,29 @@
 # Release
 
-Agent Pets publishes two npm packages:
+Agent Pets ships a GitHub desktop release and two public npm packages:
 
 - `agent-pets`
 - `opencode-agent-pets`
 
 ## Requirements
 
-- GitHub repository secret: `NPM_TOKEN`
-- Package versions updated in both `package.json` files
-- A clean tag named `v<version>`, for example `v0.1.0`
+- `NPM_TOKEN` must be a repository secret that can publish new public packages for the npm account or organization.
+- The root `package.json` version must be bumped for an automatic release from `main`.
+- `packages/opencode-agent-pets/package.json` should be bumped when the OpenCode plugin changes.
 
 ## Flow
 
-1. Push a `v*` tag.
-2. The release workflow builds Windows, macOS, and Linux desktop artifacts.
-3. The workflow creates a GitHub Release and uploads the desktop artifacts.
-4. When the GitHub Release is published, the workflow publishes both npm packages.
+1. Bump the root `package.json` version.
+2. Push to `main`.
+3. The release workflow builds Windows, macOS, and Linux artifacts.
+4. The workflow creates `v<version>` on GitHub and uploads the desktop installers.
+5. The workflow publishes any missing npm package versions.
 
-## Local Checks
+The workflow can also be run manually from GitHub Actions. If the GitHub Release already exists, it skips recreating it and retries npm publishing.
 
-Run these before tagging:
+## Checks
+
+Run these before pushing a release bump:
 
 ```bash
 bun install
@@ -29,7 +32,7 @@ bun run test
 bun run pack
 ```
 
-Check the npm package contents:
+Check package contents with:
 
 ```bash
 bun pm pack
