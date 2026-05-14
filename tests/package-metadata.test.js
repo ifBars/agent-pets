@@ -29,6 +29,18 @@ describe("package metadata", () => {
     expect(manifest.devDependencies.electron).toBeDefined();
   });
 
+  test("README quick start is user-facing", () => {
+    const readme = fs.readFileSync(path.join(__dirname, "..", "README.md"), "utf8");
+    const quickStart = readme.slice(readme.indexOf("## Quick Start"), readme.indexOf("## Agent Modes"));
+
+    expect(quickStart).toContain("bunx @ifbars/agent-pets");
+    expect(quickStart).toContain("bun install -g @ifbars/agent-pets");
+    expect(quickStart).toContain("GitHub Releases");
+    expect(quickStart).toContain("opencode plugin opencode-agent-pets --global");
+    expect(quickStart).toContain("/pet");
+    expect(quickStart).not.toContain("bun install\nbun run agent-pets");
+  });
+
   test("opencode plugin package is public-publish ready", () => {
     const rootManifest = readJson("package.json");
     const manifest = readJson("packages/opencode-agent-pets/package.json");

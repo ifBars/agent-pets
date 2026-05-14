@@ -19,27 +19,45 @@ Agent Pets puts a tiny Codex-compatible pet on your desktop. It can show coding-
 
 ## Quick Start
 
+Run it with Bun:
+
 ```bash
-bun install
-bun run agent-pets
+bunx @ifbars/agent-pets
+```
+
+Or install it on your PATH:
+
+```bash
+bun install -g @ifbars/agent-pets
+agent-pets
 ```
 
 Run a specific pet:
 
 ```bash
-bun run agent-pets -- --pet pingu
+agent-pets --pet pingu
 ```
 
 Use it without an agent:
 
 ```bash
-bun run agent-pets -- --provider desktop --pet pingu
+agent-pets --provider desktop --pet pingu
 ```
 
-After it is published to npm:
+Prefer an app binary? Download the latest Windows, macOS, or Linux build from [GitHub Releases](https://github.com/ifBars/agent-pets/releases).
+
+## OpenCode
+
+Install the companion plugin:
 
 ```bash
-bunx @ifbars/agent-pets
+opencode plugin opencode-agent-pets --global
+```
+
+Open OpenCode, then toggle the desktop pet:
+
+```text
+/pet
 ```
 
 ## Agent Modes
@@ -53,16 +71,10 @@ Agent Pets supports:
 - Desktop-only pets
 - JSON status files for custom integrations
 
-OpenCode realtime status and `/pet` support are available through the companion plugin:
+The OpenCode plugin keeps Agent Pets updated with realtime session status. You can also run OpenCode mode directly:
 
 ```bash
-bun run opencode:install-local
-```
-
-Then run Agent Pets with OpenCode:
-
-```bash
-bun run agent-pets -- --provider opencode
+agent-pets --provider opencode
 ```
 
 ## Custom Pets
@@ -75,6 +87,7 @@ Start here: [Make a Custom Pet](PET_CREATION.md)
 
 ```bash
 bun install
+bun run agent-pets
 bun run typecheck
 bun run test
 ```
