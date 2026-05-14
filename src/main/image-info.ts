@@ -1,6 +1,7 @@
-const fs = require("node:fs/promises");
+import * as fs from "node:fs/promises";
+import type { ImageInfo } from "./types";
 
-async function getImageInfo(filePath) {
+export async function getImageInfo(filePath: string): Promise<ImageInfo | null> {
   const buffer = await fs.readFile(filePath);
   const png = readPngInfo(buffer);
   if (png) return { ...png, buffer };
@@ -9,7 +10,7 @@ async function getImageInfo(filePath) {
   return null;
 }
 
-function readPngInfo(buffer) {
+export function readPngInfo(buffer: Buffer): Omit<ImageInfo, "buffer"> | null {
   if (
     buffer.length < 24 ||
     buffer[0] !== 137 ||
@@ -25,7 +26,7 @@ function readPngInfo(buffer) {
   };
 }
 
-function readWebpInfo(buffer) {
+export function readWebpInfo(buffer: Buffer): Omit<ImageInfo, "buffer"> | null {
   if (
     buffer.length < 20 ||
     buffer.subarray(0, 4).toString("ascii") !== "RIFF" ||
@@ -46,7 +47,7 @@ function readWebpInfo(buffer) {
   return null;
 }
 
-function readWebpChunkInfo(buffer, chunk, offset, size) {
+function readWebpChunkInfo(buffer: Buffer, chunk: string, offset: number, size: number): { width: number; height: number } | null {
   if (chunk === "VP8X") {
     if (size < 10) return null;
     return {
@@ -71,9 +72,3 @@ function readWebpChunkInfo(buffer, chunk, offset, size) {
   }
   return null;
 }
-
-module.exports = {
-  getImageInfo,
-  readPngInfo,
-  readWebpInfo,
-};

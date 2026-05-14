@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { validatePetPackage } = require("../src/main/validate-pet.cjs");
+const { validatePetPackage } = require("../build/src/main/validate-pet.js");
 
 async function main() {
   const target = process.argv[2];

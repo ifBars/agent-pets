@@ -1,7 +1,8 @@
-const fs = require("node:fs/promises");
-const path = require("node:path");
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import type { PetAnimationState, ProviderId, Settings, WindowBounds } from "./types";
 
-const DEFAULT_SETTINGS = {
+export const DEFAULT_SETTINGS: Settings = {
   selectedPetId: "",
   selectedState: "auto",
   provider: "codex",
@@ -10,7 +11,7 @@ const DEFAULT_SETTINGS = {
   windowBounds: null,
 };
 
-async function readSettings(settingsPath) {
+export async function readSettings(settingsPath: string): Promise<Settings> {
   try {
     const parsed = JSON.parse(await fs.readFile(settingsPath, "utf8"));
     return normalizeSettings(parsed);
@@ -19,20 +20,20 @@ async function readSettings(settingsPath) {
   }
 }
 
-async function writeSettings(settingsPath, settings) {
+export async function writeSettings(settingsPath: string, settings: Partial<Settings>): Promise<Settings> {
   const normalized = normalizeSettings(settings);
   await fs.mkdir(path.dirname(settingsPath), { recursive: true });
   await fs.writeFile(settingsPath, `${JSON.stringify(normalized, null, 2)}\n`, "utf8");
   return normalized;
 }
 
-async function updateSettings(settingsPath, patch) {
+export async function updateSettings(settingsPath: string, patch: Partial<Settings>): Promise<Settings> {
   const current = await readSettings(settingsPath);
   return writeSettings(settingsPath, { ...current, ...patch });
 }
 
-function normalizeSettings(value) {
-  const input = value && typeof value === "object" ? value : {};
+export function normalizeSettings(value: unknown): Settings {
+  const input = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
   return {
     selectedPetId: cleanString(input.selectedPetId),
     selectedState: normalizeState(input.selectedState),
@@ -43,49 +44,40 @@ function normalizeSettings(value) {
   };
 }
 
-function normalizeProvider(value) {
+export function normalizeProvider(value: unknown): ProviderId {
   const valid = new Set(["codex", "opencode", "claude-code", "t3code", "json-status", "desktop"]);
-  return valid.has(value) ? value : "codex";
+  return valid.has(value as string) ? (value as ProviderId) : "codex";
 }
 
-function normalizePetSize(value) {
+export function normalizePetSize(value: unknown): number {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return DEFAULT_SETTINGS.petSize;
   return Math.min(160, Math.max(72, Math.round(parsed)));
 }
 
-function normalizeState(value) {
+function normalizeState(value: unknown): PetAnimationState {
   const valid = new Set(["auto", "idle", "running", "running-right", "running-left", "waving", "jumping", "waiting", "review", "failed"]);
-  return valid.has(value) ? value : "auto";
+  return valid.has(value as string) ? (value as PetAnimationState) : "auto";
 }
 
-function normalizeBounds(value) {
+function normalizeBounds(value: unknown): WindowBounds | null {
   if (!value || typeof value !== "object") return null;
-  const width = finiteNumber(value.width);
-  const height = finiteNumber(value.height);
+  const input = value as Record<string, unknown>;
+  const width = finiteNumber(input.width);
+  const height = finiteNumber(input.height);
   if (!width || !height) return null;
   return {
-    x: finiteNumber(value.x),
-    y: finiteNumber(value.y),
+    x: finiteNumber(input.x),
+    y: finiteNumber(input.y),
     width: Math.max(220, width),
     height: Math.max(220, height),
   };
 }
 
-function finiteNumber(value) {
-  return Number.isFinite(value) ? value : undefined;
+function finiteNumber(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
-function cleanString(value) {
+function cleanString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
-
-module.exports = {
-  DEFAULT_SETTINGS,
-  normalizeSettings,
-  normalizeProvider,
-  normalizePetSize,
-  readSettings,
-  updateSettings,
-  writeSettings,
-};

@@ -2,7 +2,7 @@ const { describe, expect, test } = require("bun:test");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
-const { readClaudeCodeActivity } = require("../src/main/providers/claude-code.cjs");
+const { readClaudeCodeActivity } = require("../build/src/main/providers/claude-code.js");
 
 describe("claude code provider", () => {
   test("normalizes recent claude jsonl sessions without exposing message text", async () => {

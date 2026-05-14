@@ -39,6 +39,7 @@ let popoverOpen = false;
 let settingsOpen = false;
 let refreshInFlight = false;
 let refreshQueued = false;
+let ignoringMouseEvents = null;
 
 const petElement = document.getElementById("pet");
 const threadBadge = document.getElementById("threadBadge");
@@ -53,9 +54,11 @@ const statusFileRow = document.getElementById("statusFileRow");
 const petSizeInput = document.getElementById("petSizeInput");
 const activeTitle = document.getElementById("activeTitle");
 const activeDetail = document.getElementById("activeDetail");
+const activeDot = document.getElementById("activeDot");
 const statusPill = document.getElementById("statusPill");
 const sessionList = document.getElementById("sessionList");
 const sourceLabel = document.getElementById("sourceLabel");
+const appElement = document.getElementById("app");
 
 function rowFrames(rowIndex, frameCount, frameDurationMs, finalFrameDurationMs) {
   return Array.from({ length: frameCount }, (_value, columnIndex) => ({
@@ -72,8 +75,7 @@ function backgroundPosition(frame) {
 function animationForState(state) {
   const frames = STATE_FRAMES[state] || STATE_FRAMES.idle;
   if (state === "idle") return { frames: LONG_IDLE_FRAMES, loopStartIndex: 0 };
-  const repeated = [...frames, ...frames, ...frames];
-  return { frames: [...repeated, ...LONG_IDLE_FRAMES], loopStartIndex: repeated.length };
+  return { frames, loopStartIndex: 0 };
 }
 
 function setState(state) {
@@ -141,18 +143,25 @@ function renderActivity(activity) {
   const isDesktop = activity.source === "desktop";
   const activeCount = sessions.filter((session) => session.state && session.state !== "idle").length;
   const badgeCount = activeCount || sessions.length || 0;
-  sourceLabel.textContent = labelForSource(activity.source);
+  appElement.classList.toggle("desktop-mode", isDesktop);
+  threadBadge.hidden = isDesktop;
+  if (isDesktop && popoverOpen) setPopoverOpen(false);
+  sourceLabel.hidden = true;
+  sourceLabel.textContent = "";
   threadBadge.textContent = isDesktop ? "0" : String(Math.min(99, badgeCount));
   threadBadge.className = `thread-badge ${isDesktop ? "idle" : activity.state || "idle"}`;
   threadBadge.title = isDesktop ? "Desktop pet controls" : `${badgeCount} ${badgeCount === 1 ? "thread" : "threads"}`;
-  activeTitle.textContent = active?.title || (isDesktop ? "Desktop Pet" : `No ${labelForSource(activity.source)} sessions found`);
+  activeTitle.textContent = active ? displayTitle(active, activity.source) : isDesktop ? "Desktop Pet" : `No ${labelForSource(activity.source)} sessions found`;
+  activeDot.hidden = isDesktop || !active;
+  activeDot.className = `session-dot active-dot ${active?.state || activity.state || "idle"}`;
   statusPill.hidden = isDesktop;
-  statusPill.textContent = isDesktop ? "" : labelForState(activity.state);
+  statusPill.textContent = "";
+  statusPill.title = isDesktop ? "" : labelForState(activity.state);
   statusPill.className = `status-pill ${activity.state || "idle"}`;
 
   sessionList.textContent = "";
-  const visibleSessions = isDesktop ? [] : sessions.filter((session) => !active || session.id !== active.id).slice(0, 3);
-  const summary = isDesktop ? "" : summarizeActivity(active, visibleSessions.length, activity.source);
+  const visibleSessions = isDesktop ? [] : sessions.filter((session) => !isSameSession(session, active)).slice(0, 3);
+  const summary = isDesktop ? "" : active ? statusText(active) : `No active ${labelForSource(activity.source)} activity`;
   activeDetail.hidden = !summary;
   activeDetail.textContent = summary;
   for (const session of visibleSessions) {
@@ -163,10 +172,19 @@ function renderActivity(activity) {
     dot.className = `session-dot ${session.state}`;
     item.append(dot);
 
-    const title = document.createElement("span");
+    const body = document.createElement("span");
+    body.className = "session-body";
+
+    const title = document.createElement("strong");
     title.className = "session-title";
-    title.textContent = session.title;
-    item.append(title);
+    title.textContent = displayTitle(session, activity.source);
+    body.append(title);
+
+    const detail = document.createElement("span");
+    detail.className = "session-detail";
+    detail.textContent = statusText(session);
+    body.append(detail);
+    item.append(body);
 
     const time = document.createElement("span");
     time.className = "session-time";
@@ -178,9 +196,37 @@ function renderActivity(activity) {
   if (popoverOpen) positionPopover(threadPopover);
 }
 
-function summarizeActivity(active, otherCount, source) {
-  if (!active) return `No active ${labelForSource(source)} activity`;
-  return otherCount > 0 ? `${otherCount} more ${otherCount === 1 ? "session" : "sessions"}` : "";
+function isSameSession(left, right) {
+  if (!left || !right) return false;
+  if (left.id && right.id && left.id === right.id) return true;
+  if (left.sessionPath && right.sessionPath && left.sessionPath === right.sessionPath) return true;
+  return false;
+}
+
+function displayTitle(session, source) {
+  const title = String(session?.title || "").trim();
+  if (!title || isInternalId(title)) return `${labelForSource(source)} thread`;
+  return title;
+}
+
+function isInternalId(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+function statusText(session) {
+  const state = session?.state || "idle";
+  const raw = String(session?.latestEvent || session?.detail || "").trim();
+  const normalized = raw.toLowerCase().replace(/[_-]+/g, " ");
+  if (state === "running") return "Working now";
+  if (state === "waiting") return "Needs your input";
+  if (state === "failed") return "Needs attention";
+  if (state === "review") return "Ready for review";
+  if (!raw) return labelForState(state);
+  if (["task complete", "complete", "completed", "done", "finished: stop", "session idle", "assistant response"].includes(normalized)) return "Ready for review";
+  if (["message updated", "message part updated", "assistant running", "response text"].includes(normalized)) return "Working now";
+  if (normalized.startsWith("tool:")) return "Using a tool";
+  if (normalized === "tool output") return "Tool finished";
+  return labelForState(state);
 }
 
 function labelForSource(source) {
@@ -247,9 +293,32 @@ async function boot() {
   window.setInterval(() => refreshActivity().catch(console.error), 1500);
 }
 
+function setWindowMousePassthrough(ignore) {
+  if (!window.codexPets?.setIgnoreMouseEvents || ignoringMouseEvents === ignore) return;
+  ignoringMouseEvents = ignore;
+  window.codexPets.setIgnoreMouseEvents(ignore, ignore ? { forward: true } : undefined);
+}
+
+function isInteractivePoint(event) {
+  if (event.buttons) return true;
+  const elements = document.elementsFromPoint(event.clientX, event.clientY);
+  return elements.some((element) => {
+    if (!(element instanceof Element)) return false;
+    if (element.closest(".pet-stage")) return true;
+    if (popoverOpen && element.closest(".thread-popover")) return true;
+    if (settingsOpen && element.closest(".settings-popover")) return true;
+    return false;
+  });
+}
+
+function updateMousePassthrough(event) {
+  setWindowMousePassthrough(!isInteractivePoint(event));
+}
+
 function setPopoverOpen(value) {
   popoverOpen = value;
   if (popoverOpen) setSettingsOpen(false);
+  appElement.classList.toggle("activity-open", popoverOpen);
   threadPopover.classList.toggle("is-open", popoverOpen);
   threadPopover.setAttribute("aria-hidden", String(!popoverOpen));
   if (popoverOpen) positionPopover(threadPopover);
@@ -258,9 +327,11 @@ function setPopoverOpen(value) {
 function setSettingsOpen(value) {
   settingsOpen = value;
   if (settingsOpen) setPopoverOpen(false);
+  appElement.classList.toggle("settings-open", settingsOpen);
   settingsPopover.classList.toggle("is-open", settingsOpen);
   settingsPopover.setAttribute("aria-hidden", String(!settingsOpen));
   if (settingsOpen) positionPopover(settingsPopover);
+  else appElement.style.setProperty("--pet-shift", "0px");
 }
 
 function applyPetSize(value) {
@@ -272,15 +343,124 @@ function applyPetSize(value) {
 }
 
 function positionPopover(popover) {
+  if (popover === threadPopover) {
+    positionThreadPopover();
+    return;
+  }
+  if (popover === settingsPopover) {
+    positionSettingsPopover();
+    return;
+  }
   const appRect = document.getElementById("app").getBoundingClientRect();
   const petRect = petElement.getBoundingClientRect();
-  const width = popover.offsetWidth || 276;
-  const height = popover.offsetHeight || 96;
-  const gap = 8;
-  const left = Math.min(appRect.width - width - 8, Math.max(8, petRect.left + petRect.width / 2 - width / 2));
-  const top = Math.max(8, petRect.top - height - gap);
-  popover.style.left = `${Math.round(left)}px`;
-  popover.style.top = `${Math.round(top)}px`;
+  popover.style.maxHeight = "";
+  popover.style.overflowY = "";
+  const layout = calculatePopoverLayout({
+    appWidth: appRect.width,
+    petRect: {
+      left: petRect.left,
+      top: petRect.top,
+      width: petRect.width,
+      height: petRect.height,
+    },
+    popoverWidth: popover.offsetWidth || 276,
+    popoverHeight: popover.scrollHeight || popover.offsetHeight || 96,
+    constrainAbove: popover === settingsPopover,
+  });
+  popover.style.left = `${layout.left}px`;
+  popover.style.top = `${layout.top}px`;
+  if (layout.maxHeight !== null) {
+    popover.style.maxHeight = `${layout.maxHeight}px`;
+    popover.style.overflowY = "auto";
+  }
+}
+
+function positionSettingsPopover() {
+  const appRect = appElement.getBoundingClientRect();
+  settingsPopover.style.maxHeight = "";
+  settingsPopover.style.overflowY = "";
+
+  const margin = 8;
+  const gap = 12;
+  const width = settingsPopover.offsetWidth || 276;
+  const naturalHeight = settingsPopover.scrollHeight || settingsPopover.offsetHeight || 96;
+  const maxHeight = Math.max(96, appRect.height - margin * 2);
+  const height = Math.min(naturalHeight, maxHeight);
+  const basePetRect = layoutRectInApp(petElement);
+  const left = clamp(basePetRect.left + basePetRect.width / 2 - width / 2, margin, appRect.width - width - margin);
+  const top = margin;
+  const requiredPetShift = Math.max(0, top + height + gap - basePetRect.top);
+
+  settingsPopover.style.left = `${Math.round(left)}px`;
+  settingsPopover.style.top = `${top}px`;
+  if (naturalHeight > maxHeight) {
+    settingsPopover.style.maxHeight = `${Math.round(maxHeight)}px`;
+    settingsPopover.style.overflowY = "auto";
+  }
+  appElement.style.setProperty("--pet-shift", `${Math.round(requiredPetShift)}px`);
+}
+
+function positionThreadPopover() {
+  const appRect = appElement.getBoundingClientRect();
+  threadPopover.style.maxHeight = "";
+  threadPopover.style.overflowY = "";
+
+  const margin = 8;
+  const gap = 12;
+  const width = threadPopover.offsetWidth || 300;
+  const height = threadPopover.scrollHeight || threadPopover.offsetHeight || 96;
+  const basePetRect = layoutRectInApp(petElement);
+  const left = clamp(basePetRect.left + basePetRect.width / 2 - width / 2, margin, appRect.width - width - margin);
+  const top = Math.max(margin, basePetRect.top - height - gap);
+
+  threadPopover.style.left = `${Math.round(left)}px`;
+  threadPopover.style.top = `${top}px`;
+  appElement.style.setProperty("--pet-shift", "0px");
+}
+
+function layoutRectInApp(element) {
+  let left = 0;
+  let top = 0;
+  let node = element;
+  while (node && node !== appElement) {
+    left += node.offsetLeft || 0;
+    top += node.offsetTop || 0;
+    node = node.offsetParent;
+  }
+  return {
+    left,
+    top,
+    width: element.offsetWidth,
+    height: element.offsetHeight,
+  };
+}
+
+function calculatePopoverLayout(options) {
+  const gap = options.gap ?? 8;
+  const margin = options.margin ?? 8;
+  const width = Math.min(options.popoverWidth, Math.max(0, options.appWidth - margin * 2));
+  const availableAbove = Math.max(0, options.petRect.top - gap - margin);
+  const needsConstraint = Boolean(options.constrainAbove && options.popoverHeight > availableAbove);
+  const height = needsConstraint ? availableAbove : options.popoverHeight;
+  const left = clamp(
+    options.petRect.left + options.petRect.width / 2 - width / 2,
+    margin,
+    options.appWidth - width - margin,
+  );
+  const top = Math.max(margin, options.petRect.top - height - gap);
+
+  return {
+    left: Math.round(left),
+    top: Math.round(top),
+    width: Math.round(width),
+    height: Math.round(height),
+    maxHeight: needsConstraint ? Math.round(height) : null,
+  };
+}
+
+function clamp(value, min, max) {
+  if (max < min) return min;
+  return Math.min(max, Math.max(min, value));
 }
 
 function updateProviderControls() {
@@ -309,6 +489,10 @@ statusFileInput.addEventListener("change", () => {
 petElement.addEventListener("dblclick", () => setState("waving"));
 threadBadge.addEventListener("click", () => setPopoverOpen(!popoverOpen));
 settingsButton.addEventListener("click", () => setSettingsOpen(!settingsOpen));
+window.addEventListener("mousemove", updateMousePassthrough);
+window.addEventListener("mouseleave", () => setWindowMousePassthrough(true));
+window.addEventListener("mousedown", () => setWindowMousePassthrough(false));
+window.addEventListener("mouseup", (event) => updateMousePassthrough(event));
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     setPopoverOpen(false);
@@ -327,3 +511,4 @@ document.addEventListener("visibilitychange", () => {
 boot().catch((error) => {
   console.error(error);
 });
+setWindowMousePassthrough(true);

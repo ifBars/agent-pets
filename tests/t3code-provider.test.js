@@ -1,5 +1,5 @@
 const { describe, expect, test } = require("bun:test");
-const { extractLocalStorageJson, normalizeDraftStore, normalizeT3CodeSessions, readT3CodeActivity } = require("../src/main/providers/t3code.cjs");
+const { extractLocalStorageJson, normalizeDraftStore, normalizeT3CodeSessions, readT3CodeActivity } = require("../build/src/main/providers/t3code.js");
 
 describe("t3code provider", () => {
   test("normalizes t3code command sessions through injectable runner", async () => {

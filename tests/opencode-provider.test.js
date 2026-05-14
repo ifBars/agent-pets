@@ -1,10 +1,15 @@
 const { describe, expect, test } = require("bun:test");
-const { normalizeSessions, readOpenCodeActivity } = require("../src/main/providers/opencode.cjs");
+const { mergeOpenCodeSessions, normalizeSessions, readOpenCodeActivity } = require("../build/src/main/providers/opencode.js");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
 
 describe("opencode activity provider", () => {
+  async function isolatedBridgeFile() {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "agent-pets-opencode-empty-"));
+    return path.join(dir, "missing-opencode.json");
+  }
+
   test("normalizes opencode session list json into pet activity", () => {
     const now = new Date("2026-05-13T10:00:00.000Z");
     const sessions = normalizeSessions(
@@ -28,6 +33,7 @@ describe("opencode activity provider", () => {
   test("reads activity through injectable opencode runner", async () => {
     const activity = await readOpenCodeActivity({
       now: new Date("2026-05-13T10:20:00.000Z"),
+      bridgeFile: await isolatedBridgeFile(),
       runner: async () => [
         {
           id: "oc-2",
@@ -47,6 +53,7 @@ describe("opencode activity provider", () => {
   test("normalizes opencode db sessions across projects and completed steps as review", async () => {
     const activity = await readOpenCodeActivity({
       now: new Date("2026-05-13T10:20:00.000Z"),
+      bridgeFile: await isolatedBridgeFile(),
       runner: async () => [
         {
           id: "oc-db-1",
@@ -85,6 +92,7 @@ describe("opencode activity provider", () => {
   test("handles no opencode sessions as idle", async () => {
     const activity = await readOpenCodeActivity({
       now: new Date("2026-05-13T10:20:00.000Z"),
+      bridgeFile: await isolatedBridgeFile(),
       runner: async () => [],
     });
 
@@ -132,5 +140,32 @@ describe("opencode activity provider", () => {
     expect(activity.active.latestEvent).toBe("session idle");
     expect(activity.active.source).toBe("opencode-plugin");
     expect(activity.sessions).toHaveLength(1);
+  });
+
+  test("uses generated database title when bridge still has placeholder title", () => {
+    const merged = mergeOpenCodeSessions(
+      [
+        {
+          id: "oc-title",
+          title: "OpenCode session",
+          state: "running",
+          petState: "running",
+          updatedAt: "2026-05-13T10:20:00.000Z",
+        },
+      ],
+      [
+        {
+          id: "oc-title",
+          title: "Options trading basics",
+          state: "review",
+          petState: "review",
+          updatedAt: "2026-05-13T10:19:30.000Z",
+        },
+      ],
+    );
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].title).toBe("Options trading basics");
+    expect(merged[0].state).toBe("running");
   });
 });

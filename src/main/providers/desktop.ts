@@ -1,4 +1,6 @@
-function readDesktopActivity(options = {}) {
+import type { ActivityPayload, ProviderReadOptions } from "../types";
+
+export function readDesktopActivity(options: ProviderReadOptions = {}): ActivityPayload {
   const now = options.now || new Date();
   return {
     source: "desktop",
@@ -17,7 +19,3 @@ function readDesktopActivity(options = {}) {
     updatedAt: now.toISOString(),
   };
 }
-
-module.exports = {
-  readDesktopActivity,
-};

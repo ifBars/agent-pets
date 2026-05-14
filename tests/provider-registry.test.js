@@ -1,5 +1,5 @@
 const { describe, expect, test } = require("bun:test");
-const { listProviders, normalizeProvider } = require("../src/main/providers/index.cjs");
+const { listProviders, normalizeProvider } = require("../build/src/main/providers/index.js");
 
 describe("provider registry", () => {
   test("lists built-in providers", () => {

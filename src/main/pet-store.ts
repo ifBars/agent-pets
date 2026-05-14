@@ -1,15 +1,16 @@
-const fs = require("node:fs/promises");
-const path = require("node:path");
-const { getImageInfo } = require("./image-info.cjs");
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import { getImageInfo } from "./image-info";
+import type { PetManifest, PetPackage } from "./types";
 
-const ATLAS_WIDTH = 1536;
-const ATLAS_HEIGHT = 1872;
-const ATLAS_COLUMNS = 8;
-const ATLAS_ROWS = 9;
-const CELL_WIDTH = 192;
-const CELL_HEIGHT = 208;
+export const ATLAS_WIDTH = 1536;
+export const ATLAS_HEIGHT = 1872;
+export const ATLAS_COLUMNS = 8;
+export const ATLAS_ROWS = 9;
+export const CELL_WIDTH = 192;
+export const CELL_HEIGHT = 208;
 
-async function safeReadJson(filePath) {
+export async function safeReadJson(filePath: string): Promise<unknown | null> {
   try {
     return JSON.parse(await fs.readFile(filePath, "utf8"));
   } catch {
@@ -17,14 +18,14 @@ async function safeReadJson(filePath) {
   }
 }
 
-function isInside(parent, child) {
+function isInside(parent: string, child: string): boolean {
   const relative = path.relative(parent, child);
   return relative !== "" && !relative.startsWith("..") && !path.isAbsolute(relative);
 }
 
-async function readPetFolder(root, folderName, manifestName) {
+export async function readPetFolder(root: string, folderName: string, manifestName: string): Promise<PetPackage | null> {
   const folder = path.join(root, folderName);
-  const manifest = await safeReadJson(path.join(folder, manifestName));
+  const manifest = (await safeReadJson(path.join(folder, manifestName))) as PetManifest | null;
   if (!manifest || typeof manifest !== "object") return null;
 
   const spritesheetPath = typeof manifest.spritesheetPath === "string" ? manifest.spritesheetPath : "spritesheet.webp";
@@ -48,13 +49,13 @@ async function readPetFolder(root, folderName, manifestName) {
   }
 }
 
-async function readPets(codexHome) {
-  const byId = new Map();
+export async function readPets(codexHome: string): Promise<PetPackage[]> {
+  const byId = new Map<string, PetPackage>();
   for (const [root, manifest] of [
     [path.join(codexHome, "avatars"), "avatar.json"],
     [path.join(codexHome, "pets"), "pet.json"],
   ]) {
-    let entries = [];
+    let entries: any[] = [];
     try {
       entries = await fs.readdir(root, { withFileTypes: true });
     } catch {
@@ -68,15 +69,3 @@ async function readPets(codexHome) {
   }
   return [...byId.values()].sort((a, b) => a.displayName.localeCompare(b.displayName));
 }
-
-module.exports = {
-  ATLAS_WIDTH,
-  ATLAS_HEIGHT,
-  ATLAS_COLUMNS,
-  ATLAS_ROWS,
-  CELL_WIDTH,
-  CELL_HEIGHT,
-  readPetFolder,
-  readPets,
-  safeReadJson,
-};

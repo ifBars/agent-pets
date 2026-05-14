@@ -13,6 +13,10 @@ body,
   background: transparent;
 }
 
+body {
+  pointer-events: none;
+}
+
 #app {
   position: relative;
   display: grid;
@@ -20,6 +24,7 @@ body,
   padding: 12px;
   box-sizing: border-box;
   --pet-size: 112px;
+  pointer-events: none;
 }
 
 .pet-stage {
@@ -28,7 +33,18 @@ body,
   place-items: center;
   width: calc(var(--pet-size) + 44px);
   height: calc(var(--pet-size) + 62px);
+  transition: transform 170ms cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: grab;
+  pointer-events: auto;
   -webkit-app-region: drag;
+}
+
+.pet-stage:active {
+  cursor: grabbing;
+}
+
+#app.settings-open .pet-stage {
+  transform: translateY(var(--pet-shift, 0px));
 }
 
 .codex-avatar-root {
@@ -98,20 +114,29 @@ body,
   background: rgb(42 112 224 / 0.94);
 }
 
+.thread-badge[hidden] {
+  display: none;
+}
+
+#app.desktop-mode .settings-button {
+  top: 26px;
+}
+
 .thread-popover,
 .settings-popover {
   position: absolute;
+  z-index: 20;
   left: 50%;
   top: 8px;
-  width: min(276px, calc(100vw - 24px));
+  width: min(300px, calc(100vw - 24px));
   max-height: calc(100vh - 36px);
-  padding: 9px 10px;
+  padding: 0;
   box-sizing: border-box;
-  border: 1px solid rgb(255 255 255 / 0.16);
-  border-radius: 8px;
-  background: rgb(14 15 16 / 0.88);
-  box-shadow: 0 18px 44px rgb(0 0 0 / 0.36);
-  backdrop-filter: blur(14px);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
   opacity: 0;
   pointer-events: none;
   transform: translateY(8px) scale(0.985);
@@ -124,8 +149,21 @@ body,
   -webkit-app-region: no-drag;
 }
 
+.thread-popover {
+  max-height: none;
+  overflow: visible;
+}
+
 .settings-popover {
   width: min(276px, calc(100vw - 32px));
+  padding: 9px 10px;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 8px;
+  background: rgb(14 15 16 / 0.9);
+  box-shadow: 0 18px 44px rgb(0 0 0 / 0.36);
+  backdrop-filter: blur(14px);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(88 145 255 / 0.72) transparent;
 }
 
 .thread-popover.is-open,
@@ -142,9 +180,19 @@ body,
 
 .status-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 7px minmax(0, 1fr) auto;
   align-items: start;
   gap: 8px;
+  min-height: 42px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+  border: 1px solid rgb(255 255 255 / 0.13);
+  border-radius: 15px;
+  background: rgb(18 19 20 / 0.84);
+  box-shadow:
+    0 14px 32px rgb(0 0 0 / 0.28),
+    inset 0 1px 0 rgb(255 255 255 / 0.04);
+  backdrop-filter: blur(16px);
 }
 
 .eyebrow {
@@ -155,10 +203,14 @@ body,
   text-transform: uppercase;
 }
 
+.eyebrow[hidden] {
+  display: none;
+}
+
 h1 {
   margin: 0;
   color: white;
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1.2;
   font-weight: 730;
   letter-spacing: 0;
@@ -168,10 +220,10 @@ h1 {
 }
 
 .detail {
-  margin: 5px 0 0;
-  color: rgb(166 174 171);
-  font-size: 11px;
-  line-height: 1.25;
+  margin: 2px 0 0;
+  color: rgb(166 170 169);
+  font-size: 10px;
+  line-height: 1.22;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -182,15 +234,16 @@ h1 {
 }
 
 .status-pill {
-  min-width: 50px;
-  padding: 4px 8px;
-  border: 1px solid rgb(255 255 255 / 0.16);
+  position: relative;
+  width: 16px;
+  height: 16px;
+  min-width: 0;
+  padding: 0;
+  border: 2px solid rgb(255 255 255 / 0.24);
   border-radius: 999px;
-  color: rgb(229 236 232);
-  background: rgb(255 255 255 / 0.08);
-  font-size: 11px;
-  font-weight: 750;
-  text-align: center;
+  background: transparent;
+  font-size: 0;
+  text-indent: -999px;
 }
 
 .status-pill[hidden] {
@@ -198,33 +251,27 @@ h1 {
 }
 
 .status-pill.running {
-  color: rgb(183 255 222);
-  border-color: rgb(75 224 157 / 0.5);
-  background: rgb(37 129 86 / 0.28);
+  border-color: rgb(255 255 255 / 0.2);
+  border-top-color: rgb(174 177 176);
+  animation: spin 840ms linear infinite;
 }
 
 .status-pill.waiting {
-  color: rgb(255 229 178);
-  border-color: rgb(245 175 73 / 0.48);
-  background: rgb(140 89 31 / 0.28);
+  border-color: rgb(245 175 73 / 0.68);
 }
 
 .status-pill.failed {
-  color: rgb(255 200 200);
-  border-color: rgb(255 96 96 / 0.5);
-  background: rgb(150 45 45 / 0.28);
+  border-color: rgb(255 96 96 / 0.72);
 }
 
 .status-pill.review {
-  color: rgb(201 224 255);
-  border-color: rgb(105 156 255 / 0.48);
-  background: rgb(48 85 153 / 0.28);
+  border-color: rgb(105 156 255 / 0.72);
 }
 
 .session-list {
   display: grid;
-  gap: 2px;
-  margin: 8px 0 0;
+  gap: 5px;
+  margin: 5px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -232,18 +279,32 @@ h1 {
 .session-item {
   display: grid;
   grid-template-columns: 7px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 7px;
-  min-height: 21px;
+  align-items: start;
+  gap: 8px;
+  min-height: 38px;
+  padding: 7px 10px;
+  box-sizing: border-box;
+  border: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 14px;
+  background: rgb(18 19 20 / 0.78);
+  box-shadow:
+    0 12px 28px rgb(0 0 0 / 0.24),
+    inset 0 1px 0 rgb(255 255 255 / 0.035);
+  backdrop-filter: blur(14px);
   color: rgb(218 222 220);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .session-dot {
   width: 7px;
   height: 7px;
+  margin-top: 5px;
   border-radius: 999px;
   background: rgb(118 125 123);
+}
+
+.active-dot[hidden] {
+  display: none;
 }
 
 .session-dot.running {
@@ -262,15 +323,42 @@ h1 {
   background: rgb(105 156 255);
 }
 
-.session-title {
+.session-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.session-title,
+.session-detail {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.session-title {
+  color: rgb(236 238 237);
+  font-size: 11px;
+  font-weight: 680;
+}
+
+.session-detail {
+  color: rgb(166 170 169);
+  font-size: 10px;
+  line-height: 1.22;
+}
+
 .session-time {
-  color: rgb(146 153 151);
+  color: rgb(139 145 143);
+  padding-top: 1px;
+  font-size: 10px;
   font-variant-numeric: tabular-nums;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .menu-row {
@@ -320,5 +408,13 @@ input[type="range"] {
   .settings-popover {
     transition: none;
     transform: none;
+  }
+
+  .pet-stage {
+    transition: none;
+  }
+
+  .status-pill.running {
+    animation: none;
   }
 }

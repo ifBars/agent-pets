@@ -59,4 +59,32 @@ describe("opencode agent pets plugin", () => {
     });
     expect(JSON.stringify(snapshot)).not.toContain("Can I run a command?");
   });
+
+  test("keeps generated session title when later events omit it", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "agent-pets-plugin-title-"));
+    const statusFile = path.join(dir, "opencode.json");
+    const plugin = await AgentPetsOpenCodePlugin({}, { statusFile });
+
+    await plugin.event({
+      event: {
+        type: "session.status",
+        properties: {
+          sessionID: "oc-title",
+          title: "Options trading basics",
+          status: { type: "running" },
+        },
+      },
+    });
+    await plugin.event({
+      event: {
+        type: "message.updated",
+        properties: {
+          sessionID: "oc-title",
+        },
+      },
+    });
+
+    const snapshot = JSON.parse(await fs.readFile(statusFile, "utf8"));
+    expect(snapshot.sessions[0].title).toBe("Options trading basics");
+  });
 });

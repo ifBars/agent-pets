@@ -1,25 +1,26 @@
-const path = require("node:path");
-const { aggregateActivity, cleanString, findRecentFiles, normalizeState, readJsonlTail } = require("./shared.cjs");
-const { mapActivityToPetState } = require("./codex.cjs");
+import * as path from "node:path";
+import { mapActivityToPetState } from "./codex";
+import { aggregateActivity, cleanString, findRecentFiles, normalizeState, readJsonlTail } from "./shared";
+import type { ActivityPayload, ActivitySession, FileWithStat, ProviderReadOptions } from "../types";
 
-async function readClaudeCodeActivity(options = {}) {
+export async function readClaudeCodeActivity(options: ProviderReadOptions = {}): Promise<ActivityPayload> {
   const now = options.now || new Date();
   const claudeHome = options.claudeHome || path.join(process.env.USERPROFILE || process.env.HOME || "", ".claude");
   const projectsRoot = options.projectsRoot || path.join(claudeHome, "projects");
   try {
     const files = await findRecentFiles(projectsRoot, (_fullPath, name) => name.endsWith(".jsonl"), 8);
-    const sessions = [];
+    const sessions: ActivitySession[] = [];
     for (const file of files) {
       const records = await readJsonlTail(file.filePath);
       sessions.push(normalizeClaudeSession(file, records, now));
     }
     return aggregateActivity("claude-code", sessions, now, { claudeHome });
   } catch (error) {
-    return aggregateActivity("claude-code", [], now, { claudeHome, error: error.message });
+    return aggregateActivity("claude-code", [], now, { claudeHome, error: error instanceof Error ? error.message : String(error) });
   }
 }
 
-function normalizeClaudeSession(file, records, now) {
+export function normalizeClaudeSession(file: FileWithStat, records: any[], now: Date): ActivitySession {
   const latest = findLatestRecord(records);
   const sessionId = cleanString(latest?.sessionId) || path.basename(file.filePath, ".jsonl");
   const cwd = cleanString(latest?.cwd);
@@ -41,14 +42,14 @@ function normalizeClaudeSession(file, records, now) {
   };
 }
 
-function findLatestRecord(records) {
+function findLatestRecord(records: any[]): any | null {
   for (let index = records.length - 1; index >= 0; index -= 1) {
     if (records[index] && typeof records[index] === "object") return records[index];
   }
   return null;
 }
 
-function summarizeClaudeRecord(record) {
+function summarizeClaudeRecord(record: any): string {
   if (!record) return "Claude Code session activity";
   if (record.error || record.isApiErrorMessage) return "error";
   if (record.type === "user") return "user message";
@@ -58,14 +59,8 @@ function summarizeClaudeRecord(record) {
   return "Claude Code session activity";
 }
 
-function normalizeClaudeState(record, updatedAt, now) {
+export function normalizeClaudeState(record: any, updatedAt: string, now: Date) {
   if (record?.type === "assistant") return normalizeState("completed", updatedAt, now);
   if (record?.type === "user") return normalizeState("running", updatedAt, now);
   return normalizeState(record?.status || record?.type, updatedAt, now);
 }
-
-module.exports = {
-  normalizeClaudeState,
-  normalizeClaudeSession,
-  readClaudeCodeActivity,
-};

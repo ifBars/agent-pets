@@ -2,7 +2,7 @@ const { describe, expect, test } = require("bun:test");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
-const { parseEmitArgs, writeStatusFile } = require("../src/main/status-writer.cjs");
+const { parseEmitArgs, writeStatusFile } = require("../build/src/main/status-writer.js");
 
 describe("status writer", () => {
   test("parses emit args", () => {

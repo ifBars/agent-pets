@@ -1,10 +1,11 @@
-const fs = require("node:fs/promises");
-const os = require("node:os");
-const path = require("node:path");
-const { aggregateActivity, cleanString, execJson, normalizeCommandSessions, normalizeState, timestampString } = require("./shared.cjs");
-const { mapActivityToPetState } = require("./codex.cjs");
+import * as fs from "node:fs/promises";
+import * as os from "node:os";
+import * as path from "node:path";
+import { mapActivityToPetState } from "./codex";
+import { aggregateActivity, cleanString, execJson, normalizeCommandSessions, normalizeState, timestampString } from "./shared";
+import type { ActivityPayload, ActivitySession, ProviderReadOptions } from "../types";
 
-async function readOpenCodeActivity(options = {}) {
+export async function readOpenCodeActivity(options: ProviderReadOptions = {}): Promise<ActivityPayload> {
   const now = options.now || new Date();
   const runner = options.runner || runOpenCodeSessionList;
   const bridgeSessions = await readOpenCodeBridgeSessions(options, now);
@@ -13,11 +14,11 @@ async function readOpenCodeActivity(options = {}) {
     return aggregateActivity("opencode", sessions, now);
   } catch (error) {
     if (bridgeSessions.length > 0) return aggregateActivity("opencode", bridgeSessions, now);
-    return aggregateActivity("opencode", [], now, { error: error.message });
+    return aggregateActivity("opencode", [], now, { error: error instanceof Error ? error.message : String(error) });
   }
 }
 
-async function runOpenCodeSessionList(options = {}) {
+export async function runOpenCodeSessionList(options: ProviderReadOptions = {}): Promise<unknown> {
   const maxCount = Number.isFinite(options.maxCount) ? String(options.maxCount) : "8";
   try {
     return await runOpenCodeDbSessionList(maxCount, options);
@@ -26,7 +27,7 @@ async function runOpenCodeSessionList(options = {}) {
   }
 }
 
-function runOpenCodeDbSessionList(maxCount, options = {}) {
+export function runOpenCodeDbSessionList(maxCount: string, options: ProviderReadOptions = {}): Promise<unknown> {
   const limit = Math.max(1, Math.min(50, Number(maxCount) || 8));
   const query = `
 select
@@ -52,7 +53,7 @@ limit ${limit}`;
   return execJson("opencode", ["db", "--format", "json", query], options);
 }
 
-function normalizeSessions(output, now = new Date()) {
+export function normalizeSessions(output: any, now = new Date()): ActivitySession[] {
   const rows = Array.isArray(output) ? output : Array.isArray(output?.sessions) ? output.sessions : [];
   if (rows.some((item) => item && ("time_updated" in item || "message_data" in item || "part_data" in item))) {
     return rows
@@ -64,7 +65,7 @@ function normalizeSessions(output, now = new Date()) {
   return normalizeCommandSessions(output, "opencode", now);
 }
 
-async function readOpenCodeBridgeSessions(options = {}, now = new Date()) {
+export async function readOpenCodeBridgeSessions(options: ProviderReadOptions = {}, now = new Date()): Promise<ActivitySession[]> {
   const bridgeFile = cleanString(options.bridgeFile) || cleanString(process.env.AGENT_PETS_OPENCODE_STATUS_FILE) || getDefaultOpenCodeBridgeFile();
   try {
     const parsed = JSON.parse(await fs.readFile(bridgeFile, "utf8"));
@@ -74,7 +75,7 @@ async function readOpenCodeBridgeSessions(options = {}, now = new Date()) {
   }
 }
 
-function getDefaultOpenCodeBridgeFile() {
+export function getDefaultOpenCodeBridgeFile(): string {
   if (process.platform === "win32") {
     const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local");
     return path.join(localAppData, "Agent Pets", "providers", "opencode.json");
@@ -83,7 +84,7 @@ function getDefaultOpenCodeBridgeFile() {
   return path.join(stateHome, "agent-pets", "providers", "opencode.json");
 }
 
-function normalizeOpenCodeBridgeSessions(payload, now = new Date()) {
+export function normalizeOpenCodeBridgeSessions(payload: any, now = new Date()): ActivitySession[] {
   if (!payload || typeof payload !== "object") return [];
   const rows = Array.isArray(payload.sessions) ? payload.sessions : Array.isArray(payload.items) ? payload.items : [];
   return rows
@@ -93,7 +94,7 @@ function normalizeOpenCodeBridgeSessions(payload, now = new Date()) {
     .slice(0, 8);
 }
 
-function normalizeOpenCodeBridgeSession(item, index, now) {
+function normalizeOpenCodeBridgeSession(item: any, index: number, now: Date): ActivitySession | null {
   if (!item || typeof item !== "object") return null;
   const updatedAt = cleanString(item.updatedAt) || now.toISOString();
   const state = normalizeBridgeState(item.state, updatedAt, now);
@@ -112,7 +113,7 @@ function normalizeOpenCodeBridgeSession(item, index, now) {
   };
 }
 
-function normalizeBridgeState(value, updatedAt, now) {
+function normalizeBridgeState(value: unknown, updatedAt: string, now: Date) {
   const state = cleanString(value)?.toLowerCase() || "";
   if (state === "running" || state === "waiting") {
     const ageMs = now.getTime() - new Date(updatedAt).getTime();
@@ -123,10 +124,16 @@ function normalizeBridgeState(value, updatedAt, now) {
   return normalizeState(state, updatedAt, now);
 }
 
-function mergeOpenCodeSessions(preferredSessions, fallbackSessions) {
-  const merged = [];
-  const seen = new Set();
-  for (const session of [...preferredSessions, ...fallbackSessions]) {
+export function mergeOpenCodeSessions(preferredSessions: ActivitySession[], fallbackSessions: ActivitySession[]): ActivitySession[] {
+  const merged: ActivitySession[] = [];
+  const seen = new Set<string>();
+  const fallbackById = new Map(fallbackSessions.map((session) => [session.id, session]));
+  for (const session of preferredSessions) {
+    if (!session || seen.has(session.id)) continue;
+    seen.add(session.id);
+    merged.push(mergeSessionTitle(session, fallbackById.get(session.id)));
+  }
+  for (const session of fallbackSessions) {
     if (!session || seen.has(session.id)) continue;
     seen.add(session.id);
     merged.push(session);
@@ -136,7 +143,22 @@ function mergeOpenCodeSessions(preferredSessions, fallbackSessions) {
     .slice(0, 8);
 }
 
-function normalizeDbSession(item, index, now) {
+function mergeSessionTitle(session: ActivitySession, fallback?: ActivitySession): ActivitySession {
+  if (!fallback || !isOpenCodePlaceholderTitle(session.title) || isOpenCodePlaceholderTitle(fallback.title)) return session;
+  return {
+    ...session,
+    title: fallback.title,
+    directory: session.directory || fallback.directory,
+    projectId: session.projectId || fallback.projectId,
+  };
+}
+
+function isOpenCodePlaceholderTitle(value: unknown): boolean {
+  const title = cleanString(value)?.toLowerCase() || "";
+  return title === "opencode session" || /^opencode session \d+$/.test(title);
+}
+
+export function normalizeDbSession(item: any, index: number, now: Date): ActivitySession | null {
   if (!item || typeof item !== "object") return null;
   const message = parseJson(item.message_data);
   const part = parseJson(item.part_data);
@@ -157,7 +179,7 @@ function normalizeDbSession(item, index, now) {
   };
 }
 
-function classifyOpenCodeState(message, part, updatedAt, now) {
+export function classifyOpenCodeState(message: any, part: any, updatedAt: string, now: Date) {
   if (message?.error || part?.error) return "failed";
   if (part?.type === "step-finish") {
     if (part.reason === "error" || part.reason === "failed") return "failed";
@@ -170,7 +192,7 @@ function classifyOpenCodeState(message, part, updatedAt, now) {
   return normalizeState(null, updatedAt, now);
 }
 
-function summarizeOpenCodeEvent(message, part) {
+function summarizeOpenCodeEvent(message: any, part: any): string {
   if (message?.error || part?.error) return "error";
   if (part?.type === "step-finish") return part.reason ? `finished: ${part.reason}` : "finished";
   if (part?.type === "tool") return "tool";
@@ -181,24 +203,12 @@ function summarizeOpenCodeEvent(message, part) {
   return "OpenCode session activity";
 }
 
-function parseJson(value) {
-  if (!cleanString(value)) return null;
+function parseJson(value: unknown): any | null {
+  const text = cleanString(value);
+  if (!text) return null;
   try {
-    return JSON.parse(value);
+    return JSON.parse(text);
   } catch {
     return null;
   }
 }
-
-module.exports = {
-  classifyOpenCodeState,
-  getDefaultOpenCodeBridgeFile,
-  mergeOpenCodeSessions,
-  normalizeDbSession,
-  normalizeOpenCodeBridgeSessions,
-  normalizeSessions,
-  readOpenCodeActivity,
-  readOpenCodeBridgeSessions,
-  runOpenCodeDbSessionList,
-  runOpenCodeSessionList,
-};

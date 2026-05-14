@@ -2,7 +2,7 @@ const { describe, expect, test } = require("bun:test");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
-const { readPets } = require("../src/main/pet-store.cjs");
+const { readPets } = require("../build/src/main/pet-store.js");
 
 describe("pet store", () => {
   test("loads valid Codex pet package and ignores invalid paths", async () => {

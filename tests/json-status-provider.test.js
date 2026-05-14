@@ -2,7 +2,7 @@ const { describe, expect, test } = require("bun:test");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
-const { readJsonStatusActivity } = require("../src/main/providers/json-status.cjs");
+const { readJsonStatusActivity } = require("../build/src/main/providers/json-status.js");
 
 describe("json status provider", () => {
   test("maps external agent status file into activity payload", async () => {

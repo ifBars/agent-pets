@@ -1,11 +1,22 @@
-const fs = require("node:fs/promises");
-const path = require("node:path");
-const { VALID_STATES, normalizeState } = require("./providers/json-status.cjs");
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import { VALID_STATES, normalizeState } from "./providers/json-status";
+import type { ActivityState } from "./types";
 
-async function writeStatusFile(filePath, input) {
+interface EmitArgs {
+  file: string | null;
+  state: string;
+  title: string | null;
+  detail: string | null;
+  message: string | null;
+  items?: Array<Record<string, unknown>>;
+  updatedAt?: string;
+}
+
+export async function writeStatusFile(filePath: string, input: EmitArgs): Promise<{ filePath: string; payload: Record<string, unknown> }> {
   const resolved = path.resolve(filePath);
   await fs.mkdir(path.dirname(resolved), { recursive: true });
-  const payload = {
+  const payload: any = {
     state: normalizeState(input.state),
     title: cleanString(input.title) || "External agent",
     detail: cleanString(input.detail) || cleanString(input.message) || "Status updated",
@@ -24,8 +35,8 @@ async function writeStatusFile(filePath, input) {
   return { filePath: resolved, payload };
 }
 
-function parseEmitArgs(argv) {
-  const args = { file: null, state: "idle", title: null, detail: null, message: null };
+export function parseEmitArgs(argv: string[]): EmitArgs {
+  const args: EmitArgs = { file: null, state: "idle", title: null, detail: null, message: null };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--file") args.file = argv[++index] || null;
@@ -42,16 +53,10 @@ function parseEmitArgs(argv) {
   return args;
 }
 
-function emitUsage() {
+export function emitUsage(): string {
   return `Usage: agent-pets-emit --file <status.json> --state <${[...VALID_STATES].join("|")}> --title <agent> --detail <message>`;
 }
 
-function cleanString(value) {
+function cleanString(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
-
-module.exports = {
-  emitUsage,
-  parseEmitArgs,
-  writeStatusFile,
-};

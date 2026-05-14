@@ -1,13 +1,14 @@
-const fs = require("node:fs/promises");
-const path = require("node:path");
-const { execFile } = require("node:child_process");
-const { promisify } = require("node:util");
-const { mapActivityToPetState } = require("./codex.cjs");
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { mapActivityToPetState } from "./codex";
+import type { ActivityPayload, ActivitySession, ActivityState, FileWithStat, ProviderReadOptions } from "../types";
 
 const execFileAsync = promisify(execFile);
-const VALID_STATES = new Set(["idle", "running", "waiting", "failed", "review"]);
+export const VALID_STATES = new Set<ActivityState>(["idle", "running", "waiting", "failed", "review"]);
 
-async function execJson(command, args, options = {}) {
+export async function execJson(command: string, args: string[], options: ProviderReadOptions = {}): Promise<unknown> {
   const { stdout } = await execFileAsync(command, args, {
     windowsHide: true,
     timeout: options.timeout || 10_000,
@@ -16,7 +17,7 @@ async function execJson(command, args, options = {}) {
   return stdout.trim() ? JSON.parse(stdout) : [];
 }
 
-function aggregateActivity(source, sessions, now = new Date(), extra = {}) {
+export function aggregateActivity(source: string, sessions: ActivitySession[], now = new Date(), extra: Record<string, unknown> = {}): ActivityPayload {
   const active = sessions.find((item) => item.state === "running" || item.state === "waiting") || sessions[0] || null;
   const state = active?.state || "idle";
   return {
@@ -30,20 +31,20 @@ function aggregateActivity(source, sessions, now = new Date(), extra = {}) {
   };
 }
 
-function normalizeState(value, updatedAt, now = new Date()) {
+export function normalizeState(value: unknown, updatedAt?: string, now = new Date()): ActivityState {
   const state = typeof value === "string" ? value.toLowerCase() : "";
-  if (VALID_STATES.has(state)) return state;
+  if (VALID_STATES.has(state as ActivityState)) return state as ActivityState;
   if (["error", "errored", "fail", "failed", "crashed"].includes(state)) return "failed";
   if (["busy", "active", "working", "running", "streaming"].includes(state)) return "running";
   if (["blocked", "needs-input", "waiting", "paused"].includes(state)) return "waiting";
   if (["complete", "completed", "done", "finished", "success", "succeeded", "review"].includes(state)) return "review";
-  const ageMs = now.getTime() - new Date(updatedAt).getTime();
+  const ageMs = now.getTime() - new Date(updatedAt || 0).getTime();
   if (Number.isFinite(ageMs) && ageMs < 3 * 60 * 1000) return "running";
   if (Number.isFinite(ageMs) && ageMs < 30 * 60 * 1000) return "review";
   return "idle";
 }
 
-function normalizeCommandSessions(output, source, now = new Date()) {
+export function normalizeCommandSessions(output: any, source: string, now = new Date()): ActivitySession[] {
   const rows = Array.isArray(output) ? output : Array.isArray(output?.sessions) ? output.sessions : [];
   return rows
     .map((item, index) => normalizeCommandSession(item, index, source, now))
@@ -52,7 +53,7 @@ function normalizeCommandSessions(output, source, now = new Date()) {
     .slice(0, 8);
 }
 
-function normalizeCommandSession(item, index, source, now) {
+function normalizeCommandSession(item: any, index: number, source: string, now: Date): ActivitySession | null {
   if (!item || typeof item !== "object") return null;
   const updatedAt =
     cleanString(item.updatedAt) ||
@@ -89,12 +90,13 @@ function normalizeCommandSession(item, index, source, now) {
   };
 }
 
-async function findRecentFiles(rootDir, predicate, limit = 8) {
-  const files = [];
+export async function findRecentFiles(rootDir: string, predicate: (fullPath: string, name: string) => boolean, limit = 8): Promise<FileWithStat[]> {
+  const files: FileWithStat[] = [];
   const stack = [rootDir];
   while (stack.length > 0) {
     const dir = stack.pop();
-    let entries = [];
+    if (!dir) continue;
+    let entries: any[] = [];
     try {
       entries = await fs.readdir(dir, { withFileTypes: true });
     } catch {
@@ -116,7 +118,7 @@ async function findRecentFiles(rootDir, predicate, limit = 8) {
   return files.sort((left, right) => right.stat.mtimeMs - left.stat.mtimeMs).slice(0, limit);
 }
 
-async function readJsonlTail(filePath, limit = 120) {
+export async function readJsonlTail(filePath: string, limit = 120): Promise<any[]> {
   try {
     const text = await fs.readFile(filePath, "utf8");
     return text
@@ -130,7 +132,7 @@ async function readJsonlTail(filePath, limit = 120) {
   }
 }
 
-function parseJsonLine(line) {
+function parseJsonLine(line: string): unknown | null {
   try {
     return JSON.parse(line);
   } catch {
@@ -138,25 +140,13 @@ function parseJsonLine(line) {
   }
 }
 
-function cleanString(value) {
+export function cleanString(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
-function timestampString(value) {
+export function timestampString(value: unknown): string | null {
   const timestamp = Number(value);
   if (!Number.isFinite(timestamp)) return null;
   const date = new Date(timestamp);
   return Number.isFinite(date.getTime()) ? date.toISOString() : null;
 }
-
-module.exports = {
-  VALID_STATES,
-  aggregateActivity,
-  cleanString,
-  execJson,
-  findRecentFiles,
-  normalizeCommandSessions,
-  normalizeState,
-  readJsonlTail,
-  timestampString,
-};

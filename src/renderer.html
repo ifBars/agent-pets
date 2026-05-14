@@ -16,13 +16,14 @@
 
       <section id="threadPopover" class="thread-popover" aria-label="Agent activity" aria-hidden="true">
         <div class="status-row">
+          <span id="activeDot" class="session-dot active-dot idle"></span>
           <div>
             <p id="sourceLabel" class="eyebrow">Agent monitor</p>
             <h1 id="activeTitle">Scanning local sessions</h1>
+            <p id="activeDetail" class="detail">Local-only, read-only status from your Codex session files.</p>
           </div>
           <span id="statusPill" class="status-pill">Idle</span>
         </div>
-        <p id="activeDetail" class="detail">Local-only, read-only status from your Codex session files.</p>
         <ol id="sessionList" class="session-list" aria-label="Recent agent sessions"></ol>
       </section>
 

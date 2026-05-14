@@ -1,19 +1,19 @@
-const fs = require("node:fs/promises");
-const path = require("node:path");
-const { getImageInfo } = require("./image-info.cjs");
-const { ATLAS_WIDTH, ATLAS_HEIGHT, ATLAS_COLUMNS, ATLAS_ROWS, CELL_WIDTH, CELL_HEIGHT, safeReadJson } = require("./pet-store.cjs");
+import * as path from "node:path";
+import { getImageInfo } from "./image-info";
+import { ATLAS_COLUMNS, ATLAS_HEIGHT, ATLAS_ROWS, ATLAS_WIDTH, CELL_HEIGHT, CELL_WIDTH, safeReadJson } from "./pet-store";
+import type { ImageInfo, PetManifest, ValidationResult } from "./types";
 
-async function validatePetPackage(packageDir) {
+export async function validatePetPackage(packageDir: string): Promise<ValidationResult> {
   const folder = path.resolve(packageDir);
   const manifestPath = path.join(folder, "pet.json");
-  const result = {
+  const result: ValidationResult = {
     ok: false,
     packageDir: folder,
     manifestPath,
     checks: [],
   };
 
-  const manifest = await safeReadJson(manifestPath);
+  const manifest = (await safeReadJson(manifestPath)) as PetManifest | null;
   addCheck(result, "manifest", Boolean(manifest), manifest ? "pet.json parsed" : "pet.json missing or invalid JSON");
   if (!manifest) return result;
 
@@ -38,7 +38,7 @@ async function validatePetPackage(packageDir) {
   addCheck(result, "spritesheetPath", inside, "spritesheetPath must resolve inside the pet folder");
   if (!inside) return result;
 
-  let image = null;
+  let image: ImageInfo | null = null;
   try {
     image = await getImageInfo(resolvedSpritesheet);
   } catch {
@@ -63,10 +63,6 @@ async function validatePetPackage(packageDir) {
   return result;
 }
 
-function addCheck(result, name, ok, message) {
+function addCheck(result: ValidationResult, name: string, ok: boolean, message: string): void {
   result.checks.push({ name, ok, message });
 }
-
-module.exports = {
-  validatePetPackage,
-};

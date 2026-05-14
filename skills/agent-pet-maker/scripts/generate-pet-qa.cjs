@@ -2,7 +2,7 @@ const { app, BrowserWindow } = require("electron");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
-const { validatePetPackage } = require("../../../src/main/validate-pet.cjs");
+const { validatePetPackage } = require("../../../build/src/main/validate-pet.js");
 
 const ROWS = [
   { row: 0, state: "idle", frames: 6 },

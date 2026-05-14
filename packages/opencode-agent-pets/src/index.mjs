@@ -17,6 +17,7 @@ export const AgentPetsOpenCodePlugin = async (ctx = {}, options = {}) => {
     const next = {
       ...previous,
       ...update,
+      title: shouldKeepPreviousTitle(update.title, previous.title) ? previous.title : update.title,
       updatedAt: update.updatedAt || new Date().toISOString(),
     };
     sessions.set(next.id, next);
@@ -107,6 +108,15 @@ function sanitizeSession(session) {
     detail: cleanString(session.detail) || "OpenCode activity",
     updatedAt: cleanString(session.updatedAt) || new Date().toISOString(),
   };
+}
+
+function shouldKeepPreviousTitle(nextTitle, previousTitle) {
+  return cleanString(previousTitle) && isOpenCodePlaceholderTitle(nextTitle);
+}
+
+function isOpenCodePlaceholderTitle(value) {
+  const title = cleanString(value)?.toLowerCase() || "";
+  return title === "opencode session" || /^opencode session \d+$/.test(title);
 }
 
 function mapStatus(status) {

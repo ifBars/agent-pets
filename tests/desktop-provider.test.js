@@ -1,5 +1,5 @@
 const { describe, expect, test } = require("bun:test");
-const { readDesktopActivity } = require("../src/main/providers/desktop.cjs");
+const { readDesktopActivity } = require("../build/src/main/providers/desktop.js");
 
 describe("desktop provider", () => {
   test("returns stable idle desktop pet activity without sessions", () => {

@@ -1,20 +1,21 @@
-const fs = require("node:fs/promises");
-const path = require("node:path");
-const { mapActivityToPetState } = require("./codex.cjs");
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import { mapActivityToPetState } from "./codex";
+import type { ActivityPayload, ActivitySession, ActivityState, ProviderReadOptions } from "../types";
 
-const VALID_STATES = new Set(["idle", "running", "waiting", "failed", "review"]);
+export const VALID_STATES = new Set<ActivityState>(["idle", "running", "waiting", "failed", "review"]);
 
-async function readJsonStatusActivity(statusFile, options = {}) {
+export async function readJsonStatusActivity(statusFile: string | null | undefined, options: ProviderReadOptions = {}): Promise<ActivityPayload> {
   const now = options.now || new Date();
   if (!cleanString(statusFile)) return emptyActivity("", now, "No status file configured");
-  const resolved = path.resolve(statusFile);
-  let parsed = null;
-  let stat = null;
+  const resolved = path.resolve(cleanString(statusFile) || "");
+  let parsed: any = null;
+  let stat: Awaited<ReturnType<typeof fs.stat>>;
   try {
     stat = await fs.stat(resolved);
     parsed = JSON.parse(await fs.readFile(resolved, "utf8"));
   } catch (error) {
-    return emptyActivity(resolved, now, error.message);
+    return emptyActivity(resolved, now, error instanceof Error ? error.message : String(error));
   }
 
   const state = normalizeState(parsed?.state);
@@ -43,7 +44,7 @@ async function readJsonStatusActivity(statusFile, options = {}) {
   };
 }
 
-function emptyActivity(statusFile, now, error) {
+function emptyActivity(statusFile: string, now: Date, error: string): ActivityPayload {
   return {
     source: "json-status",
     statusFile,
@@ -64,7 +65,7 @@ function emptyActivity(statusFile, now, error) {
   };
 }
 
-function normalizeItems(items, fallback) {
+function normalizeItems(items: unknown, fallback: Pick<ActivitySession, "title" | "detail" | "state" | "updatedAt">): ActivitySession[] {
   const source = Array.isArray(items) && items.length > 0 ? items : [fallback];
   return source.slice(0, 8).map((item, index) => {
     const state = normalizeState(item?.state);
@@ -81,17 +82,11 @@ function normalizeItems(items, fallback) {
   });
 }
 
-function normalizeState(value) {
+export function normalizeState(value: unknown): ActivityState {
   const state = typeof value === "string" ? value.toLowerCase() : "idle";
-  return VALID_STATES.has(state) ? state : "idle";
+  return VALID_STATES.has(state as ActivityState) ? (state as ActivityState) : "idle";
 }
 
-function cleanString(value) {
+function cleanString(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
-
-module.exports = {
-  VALID_STATES,
-  readJsonStatusActivity,
-  normalizeState,
-};

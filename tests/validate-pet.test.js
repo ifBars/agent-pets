@@ -2,7 +2,7 @@ const { describe, expect, test } = require("bun:test");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
-const { validatePetPackage } = require("../src/main/validate-pet.cjs");
+const { validatePetPackage } = require("../build/src/main/validate-pet.js");
 
 describe("pet package validator", () => {
   test("accepts a valid package shape", async () => {

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": false,
   "description": "Local-first desktop pets that mirror Codex and agent activity.",
-  "main": "src/main.cjs",
+  "main": "build/src/main.js",
   "license": "MIT",
   "homepage": "https://github.com/ifBars/agent-pets#readme",
   "workspaces": [
@@ -27,20 +27,32 @@
     "agent-pets-validate": "bin/agent-pets-validate.cjs",
     "pets": "bin/agent-pets.cjs"
   },
+  "files": [
+    "build/src/**/*",
+    "bin/**/*",
+    "packages/opencode-agent-pets/**/*",
+    "skills/agent-pet-maker/**/*",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
   "scripts": {
-    "pets": "electron .",
-    "list": "electron . -- --list",
-    "validate:pet": "node bin/agent-pets-validate.cjs",
-    "qa:pet": "electron skills/agent-pet-maker/scripts/generate-pet-qa.cjs",
+    "prepack": "bun run build",
+    "build": "node bin/build-runtime.cjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "pets": "bun run build && electron .",
+    "list": "bun run build && electron . -- --list",
+    "validate:pet": "bun run build && node bin/agent-pets-validate.cjs",
+    "qa:pet": "bun run build && electron skills/agent-pet-maker/scripts/generate-pet-qa.cjs",
     "clean:pet-edges": "python skills/agent-pet-maker/scripts/clean_pet_edges.py",
-    "emit": "node bin/agent-pets-emit.cjs",
+    "emit": "bun run build && node bin/agent-pets-emit.cjs",
     "opencode:install-local": "node bin/agent-pets-opencode-install.cjs",
-    "test": "bun test",
-    "pack": "electron-builder --dir --publish never",
-    "dist": "electron-builder --publish never",
-    "dist:win": "electron-builder --win --publish never",
-    "dist:mac": "electron-builder --mac --publish never",
-    "dist:linux": "electron-builder --linux --publish never"
+    "test": "bun run build && bun test",
+    "pack": "bun run build && electron-builder --dir --publish never",
+    "dist": "bun run build && electron-builder --publish never",
+    "dist:win": "bun run build && electron-builder --win --publish never",
+    "dist:mac": "bun run build && electron-builder --mac --publish never",
+    "dist:linux": "bun run build && electron-builder --linux --publish never"
   },
   "build": {
     "appId": "dev.agentpets.desktop",
@@ -51,7 +63,7 @@
       "buildResources": "build"
     },
     "files": [
-      "src/**/*",
+      "build/src/**/*",
       "bin/**/*",
       "packages/opencode-agent-pets/**/*",
       "skills/agent-pet-maker/**/*",
@@ -107,7 +119,9 @@
     }
   },
   "devDependencies": {
+    "@types/node": "^25.7.0",
     "electron": "^39.2.4",
-    "electron-builder": "^26.8.1"
+    "electron-builder": "^26.8.1",
+    "typescript": "^6.0.3"
   }
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { emitUsage, parseEmitArgs, writeStatusFile } = require("../src/main/status-writer.cjs");
+const { emitUsage, parseEmitArgs, writeStatusFile } = require("../build/src/main/status-writer.js");
 
 async function main() {
   const args = parseEmitArgs(process.argv.slice(2));

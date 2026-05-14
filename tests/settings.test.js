@@ -2,8 +2,8 @@ const { describe, expect, test } = require("bun:test");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
-const { normalizeSettings, readSettings, updateSettings } = require("../src/main/settings.cjs");
-const { parseArgs } = require("../src/main.cjs");
+const { normalizeSettings, readSettings, updateSettings } = require("../build/src/main/settings.js");
+const { parseArgs } = require("../build/src/main.js");
 
 describe("settings", () => {
   test("normalizes invalid values to defaults", () => {

@@ -1,12 +1,25 @@
-const { app, BrowserWindow, ipcMain, Menu, Tray } = require("electron");
-const path = require("node:path");
-const { readPets } = require("./main/pet-store.cjs");
-const { readActivity } = require("./main/activity.cjs");
-const { validatePetPackage } = require("./main/validate-pet.cjs");
-const { readSettings, updateSettings } = require("./main/settings.cjs");
+import { app, BrowserWindow, ipcMain, Menu, Tray, type IpcMainInvokeEvent } from "electron";
+import * as path from "node:path";
+import { readActivity } from "./main/activity";
+import { readPets } from "./main/pet-store";
+import { readSettings, updateSettings } from "./main/settings";
+import { validatePetPackage } from "./main/validate-pet";
+import type { ProviderId, WindowBounds } from "./main/types";
 
-function parseArgs(argv) {
-  const args = {
+export interface StartupArgs {
+  pet: string | null;
+  state: string | null;
+  list: boolean;
+  codexHome: string | null;
+  statusFile: string | null;
+  provider: ProviderId | string | null;
+  petSize: string | null;
+  validatePet: string | null;
+  userDataDir: string | null;
+}
+
+export function parseArgs(argv: string[]): StartupArgs {
+  const args: StartupArgs = {
     pet: null,
     state: null,
     list: false,
@@ -40,11 +53,11 @@ function parseArgs(argv) {
   return args;
 }
 
-function getCodexHome(args) {
+export function getCodexHome(args: StartupArgs): string {
   return path.resolve(args.codexHome || process.env.CODEX_HOME || path.join(app.getPath("home"), ".codex"));
 }
 
-async function createWindow(args) {
+export async function createWindow(args: StartupArgs): Promise<void> {
   const codexHome = getCodexHome(args);
   const settingsPath = path.join(app.getPath("userData"), "settings.json");
   const settings = await readSettings(settingsPath);
@@ -65,12 +78,12 @@ async function createWindow(args) {
   const selected = pets.find((pet) => pet.id === selectedPetId) || pets[0] || null;
   const effectiveSettings = await updateSettings(settingsPath, {
     selectedPetId: selected?.id || settings.selectedPetId,
-    selectedState: args.state || settings.selectedState || "auto",
-    provider: args.provider || settings.provider || (args.statusFile ? "json-status" : "codex"),
-    petSize: args.petSize || settings.petSize,
+    selectedState: (args.state || settings.selectedState || "auto") as any,
+    provider: (args.provider || settings.provider || (args.statusFile ? "json-status" : "codex")) as any,
+    petSize: args.petSize ? Number(args.petSize) : settings.petSize,
     statusFile: args.statusFile || settings.statusFile || "",
   });
-  const bounds = settings.windowBounds || {};
+  const bounds: Partial<WindowBounds> = settings.windowBounds || {};
   const win = new BrowserWindow({
     x: bounds.x,
     y: bounds.y,
@@ -86,7 +99,7 @@ async function createWindow(args) {
     hasShadow: false,
     backgroundColor: "#00000000",
     webPreferences: {
-      preload: path.join(__dirname, "preload.cjs"),
+      preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
     },
@@ -108,8 +121,8 @@ async function createWindow(args) {
   });
 }
 
-function wireWindowPersistence(win, settingsPath) {
-  let saveTimer = null;
+function wireWindowPersistence(win: BrowserWindow, settingsPath: string): void {
+  let saveTimer: NodeJS.Timeout | null = null;
   const queueSave = () => {
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
@@ -124,8 +137,8 @@ function wireWindowPersistence(win, settingsPath) {
   });
 }
 
-function wireTray(win) {
-  let tray = null;
+function wireTray(win: BrowserWindow): void {
+  let tray: Tray;
   try {
     tray = new Tray(path.join(__dirname, "assets", "tray.png"));
   } catch {
@@ -142,14 +155,19 @@ function wireTray(win) {
   );
 }
 
-function registerIpcHandlers() {
-  ipcMain.handle("pets:list", async (_event, codexHome) => readPets(codexHome));
-  ipcMain.handle("activity:read", async (_event, options) => readActivity(options));
+export function registerIpcHandlers(): void {
+  ipcMain.handle("pets:list", async (_event: IpcMainInvokeEvent, codexHome: string) => readPets(codexHome));
+  ipcMain.handle("activity:read", async (_event: IpcMainInvokeEvent, options) => readActivity(options));
   ipcMain.handle("settings:get", async () => readSettings(path.join(app.getPath("userData"), "settings.json")));
-  ipcMain.handle("settings:update", async (_event, patch) => updateSettings(path.join(app.getPath("userData"), "settings.json"), patch));
+  ipcMain.handle("settings:update", async (_event: IpcMainInvokeEvent, patch) => updateSettings(path.join(app.getPath("userData"), "settings.json"), patch));
+  ipcMain.on("window:set-ignore-mouse-events", (event, ignore: boolean, options?: { forward?: boolean }) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win || win.isDestroyed()) return;
+    win.setIgnoreMouseEvents(Boolean(ignore), ignore ? options : undefined);
+  });
 }
 
-if (process.versions.electron && process.type === "browser") {
+if (process.versions.electron && (process as any).type === "browser") {
   const startupArgs = parseArgs(process.argv.slice(2));
   if (startupArgs.userDataDir) app.setPath("userData", path.resolve(startupArgs.userDataDir));
 
@@ -157,10 +175,3 @@ if (process.versions.electron && process.type === "browser") {
   app.whenReady().then(() => createWindow(startupArgs));
   app.on("window-all-closed", () => app.quit());
 }
-
-module.exports = {
-  createWindow,
-  parseArgs,
-  getCodexHome,
-  registerIpcHandlers,
-};
