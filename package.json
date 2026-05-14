@@ -2,7 +2,7 @@
   "name": "agent-pets",
   "version": "1.0.0",
   "private": false,
-  "description": "Local-first desktop pets that mirror Codex and agent activity.",
+  "description": "Local-first desktop pets that mirror Codex and other coding agents activity.",
   "main": "build/src/main.js",
   "license": "MIT",
   "homepage": "https://github.com/ifBars/agent-pets#readme",
@@ -19,12 +19,10 @@
   "bugs": {
     "url": "https://github.com/ifBars/agent-pets/issues"
   },
-  "author": {
-    "name": "Agent Pets contributors",
-    "email": "agent-pets@example.com"
-  },
+  "author": "ifBars",
   "keywords": [
     "codex",
+    "codex-pets",
     "desktop-pets",
     "agent-status",
     "electron",

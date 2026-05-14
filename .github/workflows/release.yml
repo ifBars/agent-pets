@@ -3,6 +3,10 @@ name: Release
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
+    paths:
+      - package.json
     tags:
       - "v*"
   release:
@@ -13,9 +17,74 @@ permissions:
   contents: read
 
 jobs:
+  prepare:
+    name: Prepare release
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.release.outputs.should_release }}
+      version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Detect release version
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          should_release=false
+          version=""
+          tag=""
+
+          if [ "${{ github.event_name }}" = "release" ]; then
+            tag="${{ github.event.release.tag_name }}"
+            version="${tag#v}"
+            should_release=true
+          elif [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            tag="${GITHUB_REF_NAME}"
+            version="${tag#v}"
+            should_release=true
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            version="$(node -p "require('./package.json').version")"
+            tag="v${version}"
+            should_release=true
+          else
+            if git diff --name-only HEAD^ HEAD -- package.json | grep -qx "package.json"; then
+              version="$(node -p "require('./package.json').version")"
+              tag="v${version}"
+              should_release=true
+            fi
+          fi
+
+          if [ "${should_release}" = "true" ] && [ "${{ github.event_name }}" != "release" ]; then
+            if gh release view "${tag}" >/dev/null 2>&1; then
+              echo "Release ${tag} already exists; skipping."
+              should_release=false
+            elif bun pm view "agent-pets@${version}" version >/dev/null 2>&1; then
+              echo "agent-pets@${version} is already published; skipping."
+              should_release=false
+            fi
+          fi
+
+          echo "should_release=${should_release}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
   build:
     name: Build ${{ matrix.os }}
-    if: github.event_name != 'release'
+    if: needs.prepare.outputs.should_release == 'true' && github.event_name != 'release'
+    needs: prepare
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -77,8 +146,10 @@ jobs:
 
   github-release:
     name: Publish GitHub release assets
-    if: github.event_name == 'push'
-    needs: build
+    if: needs.prepare.outputs.should_release == 'true' && github.event_name == 'push'
+    needs:
+      - prepare
+      - build
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -96,11 +167,12 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" release-artifacts/* --generate-notes --title "${GITHUB_REF_NAME}"
+        run: gh release create "${{ needs.prepare.outputs.tag }}" release-artifacts/* --generate-notes --title "${{ needs.prepare.outputs.tag }}" --target "${GITHUB_SHA}"
 
   npm-publish:
-    name: Publish npm packages
-    if: github.event_name == 'release'
+    name: Publish npm packages from GitHub release
+    if: needs.prepare.outputs.should_release == 'true' && github.event_name == 'release'
+    needs: prepare
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -127,10 +199,83 @@ jobs:
       - name: Publish Agent Pets
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: bun publish --access public
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
 
       - name: Publish OpenCode plugin
         working-directory: packages/opencode-agent-pets
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: bun publish --access public
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "opencode-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "opencode-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+  npm-publish-version-bump:
+    name: Publish npm packages from version bump
+    if: needs.prepare.outputs.should_release == 'true' && github.event_name == 'push'
+    needs:
+      - prepare
+      - build
+      - github-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Test
+        run: bun run test
+
+      - name: Publish Agent Pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish OpenCode plugin
+        working-directory: packages/opencode-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "opencode-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "opencode-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
