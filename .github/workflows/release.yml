@@ -24,6 +24,7 @@ jobs:
       should_release: ${{ steps.release.outputs.should_release }}
       version: ${{ steps.release.outputs.version }}
       tag: ${{ steps.release.outputs.tag }}
+      release_exists: ${{ steps.release.outputs.release_exists }}
 
     steps:
       - name: Checkout
@@ -44,6 +45,9 @@ jobs:
           set -euo pipefail
 
           should_release=false
+          release_exists=false
+          agent_pets_published=false
+          opencode_agent_pets_published=false
           version=""
           tag=""
 
@@ -77,9 +81,20 @@ jobs:
           if [ "${should_release}" = "true" ] && [ "${{ github.event_name }}" != "release" ]; then
             if gh release view "${tag}" >/dev/null 2>&1; then
               echo "Release ${tag} already exists; skipping."
-              should_release=false
-            elif bun pm view "agent-pets@${version}" version >/dev/null 2>&1; then
+              release_exists=true
+            fi
+
+            if bun pm view "agent-pets@${version}" version >/dev/null 2>&1; then
               echo "agent-pets@${version} is already published; skipping."
+              agent_pets_published=true
+            fi
+
+            if bun pm view "opencode-agent-pets@${version}" version >/dev/null 2>&1; then
+              echo "opencode-agent-pets@${version} is already published; skipping."
+              opencode_agent_pets_published=true
+            fi
+
+            if [ "${release_exists}" = "true" ] && [ "${agent_pets_published}" = "true" ] && [ "${opencode_agent_pets_published}" = "true" ]; then
               should_release=false
             fi
           fi
@@ -87,6 +102,7 @@ jobs:
           echo "should_release=${should_release}" >> "$GITHUB_OUTPUT"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "release_exists=${release_exists}" >> "$GITHUB_OUTPUT"
 
   build:
     name: Build ${{ matrix.os }}
@@ -153,7 +169,7 @@ jobs:
 
   github-release:
     name: Publish GitHub release assets
-    if: needs.prepare.outputs.should_release == 'true' && github.event_name != 'release'
+    if: needs.prepare.outputs.should_release == 'true' && needs.prepare.outputs.release_exists != 'true' && github.event_name != 'release'
     needs:
       - prepare
       - build
@@ -241,7 +257,7 @@ jobs:
 
   npm-publish-version-bump:
     name: Publish npm packages from generated release
-    if: needs.prepare.outputs.should_release == 'true' && github.event_name != 'release'
+    if: always() && needs.prepare.outputs.should_release == 'true' && needs.build.result == 'success' && github.event_name != 'release' && (needs.prepare.outputs.release_exists == 'true' || needs.github-release.result == 'success')
     needs:
       - prepare
       - build

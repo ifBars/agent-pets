@@ -25,6 +25,8 @@ describe("workflow config", () => {
     expect(workflow).toContain('tag="v${version}"');
     expect(workflow).toContain('gh release view "${tag}"');
     expect(workflow).toContain('bun pm view "agent-pets@${version}" version');
+    expect(workflow).toContain('bun pm view "opencode-agent-pets@${version}" version');
+    expect(workflow).toContain("release_exists: ${{ steps.release.outputs.release_exists }}");
     expect(workflow).toContain("gh release create");
     expect(workflow).toContain("find release-artifacts -type f -print0");
     expect(workflow).toContain('"${release_files[@]}"');
@@ -32,8 +34,7 @@ describe("workflow config", () => {
     expect(workflow).toContain("name: Publish npm packages from GitHub release");
     expect(workflow).toContain("if: needs.prepare.outputs.should_release == 'true' && github.event_name == 'release'");
     expect(workflow).toContain("name: Publish npm packages from generated release");
-    expect(workflow).toContain("if: needs.prepare.outputs.should_release == 'true' && github.event_name != 'release'");
-    expect(workflow).toContain('bun pm view "opencode-agent-pets@${version}" version');
+    expect(workflow).toContain("needs.prepare.outputs.release_exists == 'true' || needs.github-release.result == 'success'");
     expect(workflow).toContain("bun publish --access public");
     expect(workflow).toContain("working-directory: packages/opencode-agent-pets");
     expect(workflow).toContain("NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}");
