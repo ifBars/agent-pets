@@ -26,6 +26,15 @@ describe("renderer layout", () => {
     expect(css).toContain("min-height: 34px");
   });
 
+  test("thread titles follow compact Codex-style typography", () => {
+    const css = fs.readFileSync(path.join(__dirname, "..", "src", "renderer.css"), "utf8");
+
+    expect(css).toContain("color: rgb(218 222 220)");
+    expect(css).toContain("font-weight: 610");
+    expect(css).toContain("font-weight: 620");
+    expect(css).not.toContain("font-weight: 730");
+  });
+
   test("badge counts actionable sessions instead of every review row", () => {
     const renderer = fs.readFileSync(path.join(__dirname, "..", "src", "renderer.js"), "utf8");
 

@@ -277,6 +277,14 @@ describe("codex activity provider", () => {
             cwd: "C:\\Users\\ghost\\Documents\\Codex\\2026-05-13\\look-into-codex-s-pets-use",
           },
         }),
+        JSON.stringify({
+          timestamp: "2026-05-13T10:00:00.250Z",
+          type: "event_msg",
+          payload: {
+            type: "user_message",
+            message: "Look into codex's pets, use whatever is best to analyze the binary",
+          },
+        }),
         JSON.stringify({ timestamp: "2026-05-13T10:00:01.000Z", type: "response_item", payload: { type: "message", role: "assistant" } }),
       ].join("\n"),
       "utf8",
@@ -286,7 +294,7 @@ describe("codex activity provider", () => {
     const activity = await readCodexActivity(codexHome, { now: new Date("2026-05-13T10:00:02.000Z") });
 
     expect(activity.sessions[0].id).toBe("019e20ab-fc12-71a3-8209-3ccb59aaef09");
-    expect(activity.sessions[0].title).toBe("Look Into Codex S Pets Use");
+    expect(activity.sessions[0].title).toBe("Look into codex's pets, use whatever is best to analyze the binary");
     expect(activity.sessions[0].sessionPath).toBe(freshPath);
     expect(activity.sessions[0].state).toBe("review");
     expect(activity.sessions.some((session) => session.id === "old-session")).toBe(true);
@@ -324,6 +332,31 @@ describe("codex activity provider", () => {
     const activity = await readCodexActivity(codexHome, { now: new Date("2026-05-13T10:00:02.000Z") });
 
     expect(activity.sessions[0].title).toBe("Plan interaction UI refactor");
+  });
+
+  test("falls back to readable cwd title when no user message or generated title exists", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "agent-pets-codex-cwd-title-"));
+    const codexHome = path.join(root, ".codex");
+    const sessionDir = path.join(codexHome, "sessions", "2026", "05", "13");
+    await fs.mkdir(sessionDir, { recursive: true });
+
+    const sessionPath = path.join(sessionDir, "rollout-2026-05-13T10-00-00-019e20ab-fc12-71a3-8209-3ccb59aaef09.jsonl");
+    await fs.writeFile(
+      sessionPath,
+      JSON.stringify({
+        timestamp: "2026-05-13T10:00:00.000Z",
+        type: "session_meta",
+        payload: {
+          id: "019e20ab-fc12-71a3-8209-3ccb59aaef09",
+          cwd: "C:\\Users\\ghost\\Documents\\Codex\\2026-05-13\\look-into-codex-s-pets-use",
+        },
+      }),
+      "utf8",
+    );
+
+    const activity = await readCodexActivity(codexHome, { now: new Date("2026-05-13T10:00:02.000Z") });
+
+    expect(activity.sessions[0].title).toBe("Look into codex's pets use");
   });
 });
 

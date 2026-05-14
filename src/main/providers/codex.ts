@@ -136,7 +136,8 @@ async function readSessionSample(filePath: string): Promise<any | null> {
   } catch {
     return null;
   }
-  const lines = text.split(/\r?\n/).filter(Boolean).slice(-120);
+  const allLines = text.split(/\r?\n/).filter(Boolean);
+  const lines = [...allLines.slice(0, 40), ...allLines.slice(-120)];
   const records = lines.map((line) => parseJsonLine(line)).filter(Boolean);
   return {
     filePath,
@@ -187,7 +188,7 @@ export function classifySession(entry: any, sessionPath: string | null, sample: 
 
   return {
     id: entry.id,
-    title: entry.thread_name || "Untitled Codex thread",
+    title: titleFromFirstUserMessage(records) || normalizeCodexTitle(entry.thread_name) || "Untitled Codex thread",
     updatedAt: updatedAt.toISOString(),
     state: state as ActivityState,
     petState: mapActivityToPetState(state),
@@ -274,6 +275,37 @@ function summarizePayload(payload: any): string | null {
   return null;
 }
 
+function titleFromFirstUserMessage(records: any[]): string | null {
+  for (const record of records) {
+    const payload = record?.payload;
+    if (!payload || typeof payload !== "object") continue;
+    const text = payload.type === "user_message" ? payload.message : payload.type === "message" && payload.role === "user" ? textFromMessageContent(payload.content) : null;
+    const title = normalizeCodexTitle(text);
+    if (title) return title;
+  }
+  return null;
+}
+
+function textFromMessageContent(content: unknown): string | null {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return null;
+  return content
+    .map((item: any) => (typeof item === "string" ? item : typeof item?.text === "string" ? item.text : ""))
+    .join(" ")
+    .trim();
+}
+
+function normalizeCodexTitle(value: unknown): string | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const firstLine = value
+    .trim()
+    .split(/\r?\n/, 1)[0]
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!firstLine) return null;
+  return firstLine.length > 120 ? `${firstLine.slice(0, 117).trim()}...` : firstLine;
+}
+
 function extractSessionIdFromPath(filePath: string): string | null {
   const match = path.basename(filePath).match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jsonl$/i);
   return match?.[1] || null;
@@ -296,7 +328,11 @@ function titleFromCwd(value: unknown): string | null {
     .replace(/\s+/g, " ")
     .trim();
   if (!title) return null;
-  return title.replace(/\b\w/g, (letter) => letter.toUpperCase());
+  const normalized = title
+    .replace(/\bcodex s\b/gi, "codex's")
+    .replace(/\bi\b/g, "I")
+    .replace(/^[a-z]/, (letter) => letter.toUpperCase());
+  return normalizeCodexTitle(normalized);
 }
 
 export function isReviewPayload(payload: any): boolean {
