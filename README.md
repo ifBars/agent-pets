@@ -30,7 +30,7 @@ bun run agent-pets -- --provider desktop --pet pingu
 After it is published to npm:
 
 ```bash
-bunx agent-pets
+bunx @ifbars/agent-pets
 ```
 
 ## Agent Modes

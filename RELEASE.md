@@ -2,7 +2,7 @@
 
 Agent Pets ships a GitHub desktop release and two public npm packages:
 
-- `agent-pets`
+- `@ifbars/agent-pets`
 - `opencode-agent-pets`
 
 ## Requirements

@@ -6,7 +6,7 @@ describe("package metadata", () => {
   test("publishes agent-pets as the only desktop launcher command", () => {
     const manifest = readJson("package.json");
 
-    expect(manifest.name).toBe("agent-pets");
+    expect(manifest.name).toBe("@ifbars/agent-pets");
     expect(manifest.private).toBe(false);
     expect(manifest.bin["agent-pets"]).toBe("bin/agent-pets.cjs");
     expect(manifest.bin.pets).toBeUndefined();

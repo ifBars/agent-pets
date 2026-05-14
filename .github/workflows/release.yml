@@ -84,8 +84,8 @@ jobs:
               release_exists=true
             fi
 
-            if bun pm view "agent-pets@${version}" version >/dev/null 2>&1; then
-              echo "agent-pets@${version} is already published; skipping."
+            if bun pm view "@ifbars/agent-pets@${version}" version >/dev/null 2>&1; then
+              echo "@ifbars/agent-pets@${version} is already published; skipping."
               agent_pets_published=true
             fi
 
@@ -235,8 +235,8 @@ jobs:
           set -euo pipefail
           version="$(node -p "require('./package.json').version")"
 
-          if bun pm view "agent-pets@${version}" version >/dev/null 2>&1; then
-            echo "agent-pets@${version} is already published; skipping."
+          if bun pm view "@ifbars/agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "@ifbars/agent-pets@${version} is already published; skipping."
           else
             bun publish --access public
           fi
@@ -295,8 +295,8 @@ jobs:
           set -euo pipefail
           version="$(node -p "require('./package.json').version")"
 
-          if bun pm view "agent-pets@${version}" version >/dev/null 2>&1; then
-            echo "agent-pets@${version} is already published; skipping."
+          if bun pm view "@ifbars/agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "@ifbars/agent-pets@${version} is already published; skipping."
           else
             bun publish --access public
           fi

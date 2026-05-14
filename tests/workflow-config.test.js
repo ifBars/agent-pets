@@ -24,7 +24,7 @@ describe("workflow config", () => {
     expect(workflow).toContain('if [ "${version}" != "${previous_version}" ]; then');
     expect(workflow).toContain('tag="v${version}"');
     expect(workflow).toContain('gh release view "${tag}"');
-    expect(workflow).toContain('bun pm view "agent-pets@${version}" version');
+    expect(workflow).toContain('bun pm view "@ifbars/agent-pets@${version}" version');
     expect(workflow).toContain('bun pm view "opencode-agent-pets@${version}" version');
     expect(workflow).toContain("release_exists: ${{ steps.release.outputs.release_exists }}");
     expect(workflow).toContain("gh release create");

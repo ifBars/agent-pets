@@ -1,6 +1,6 @@
 {
-  "name": "agent-pets",
-  "version": "1.0.0",
+  "name": "@ifbars/agent-pets",
+  "version": "1.0.1",
   "private": false,
   "description": "Local-first desktop pets that mirror Codex and other coding agents activity.",
   "main": "build/src/main.js",
