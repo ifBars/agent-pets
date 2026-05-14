@@ -9,10 +9,12 @@ describe("provider registry", () => {
     expect(ids).toContain("claude-code");
     expect(ids).toContain("t3code");
     expect(ids).toContain("json-status");
+    expect(ids).toContain("desktop");
   });
 
   test("normalizes unknown providers to codex", () => {
     expect(normalizeProvider("unknown")).toBe("codex");
     expect(normalizeProvider("opencode")).toBe("opencode");
+    expect(normalizeProvider("desktop")).toBe("desktop");
   });
 });

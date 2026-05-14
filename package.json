@@ -32,6 +32,7 @@
     "list": "electron . -- --list",
     "validate:pet": "node bin/agent-pets-validate.cjs",
     "qa:pet": "electron skills/agent-pet-maker/scripts/generate-pet-qa.cjs",
+    "clean:pet-edges": "python skills/agent-pet-maker/scripts/clean_pet_edges.py",
     "emit": "node bin/agent-pets-emit.cjs",
     "opencode:install-local": "node bin/agent-pets-opencode-install.cjs",
     "test": "bun test",

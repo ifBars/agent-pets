@@ -138,19 +138,21 @@ async function refreshActivity() {
 function renderActivity(activity) {
   const active = activity.active;
   const sessions = activity.sessions || [];
+  const isDesktop = activity.source === "desktop";
   const activeCount = sessions.filter((session) => session.state && session.state !== "idle").length;
   const badgeCount = activeCount || sessions.length || 0;
   sourceLabel.textContent = labelForSource(activity.source);
-  threadBadge.textContent = String(Math.min(99, badgeCount));
-  threadBadge.className = `thread-badge ${activity.state || "idle"}`;
-  threadBadge.title = `${badgeCount} ${badgeCount === 1 ? "thread" : "threads"}`;
-  activeTitle.textContent = active?.title || `No ${labelForSource(activity.source)} sessions found`;
-  statusPill.textContent = labelForState(activity.state);
+  threadBadge.textContent = isDesktop ? "0" : String(Math.min(99, badgeCount));
+  threadBadge.className = `thread-badge ${isDesktop ? "idle" : activity.state || "idle"}`;
+  threadBadge.title = isDesktop ? "Desktop pet controls" : `${badgeCount} ${badgeCount === 1 ? "thread" : "threads"}`;
+  activeTitle.textContent = active?.title || (isDesktop ? "Desktop Pet" : `No ${labelForSource(activity.source)} sessions found`);
+  statusPill.hidden = isDesktop;
+  statusPill.textContent = isDesktop ? "" : labelForState(activity.state);
   statusPill.className = `status-pill ${activity.state || "idle"}`;
 
   sessionList.textContent = "";
-  const visibleSessions = sessions.filter((session) => !active || session.id !== active.id).slice(0, 3);
-  const summary = summarizeActivity(active, visibleSessions.length, activity.source);
+  const visibleSessions = isDesktop ? [] : sessions.filter((session) => !active || session.id !== active.id).slice(0, 3);
+  const summary = isDesktop ? "" : summarizeActivity(active, visibleSessions.length, activity.source);
   activeDetail.hidden = !summary;
   activeDetail.textContent = summary;
   for (const session of visibleSessions) {
@@ -188,6 +190,7 @@ function labelForSource(source) {
     "claude-code": "Claude Code",
     t3code: "T3Code",
     "json-status": "Status file",
+    desktop: "Desktop",
   }[source] || "Agent";
 }
 

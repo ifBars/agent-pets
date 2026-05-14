@@ -3,6 +3,7 @@ const { readJsonStatusActivity } = require("./json-status.cjs");
 const { readOpenCodeActivity } = require("./opencode.cjs");
 const { readClaudeCodeActivity } = require("./claude-code.cjs");
 const { readT3CodeActivity } = require("./t3code.cjs");
+const { readDesktopActivity } = require("./desktop.cjs");
 
 const PROVIDERS = [
   { id: "codex", label: "Codex", read: (options) => readCodexActivity(options.codexHome, options) },
@@ -10,6 +11,7 @@ const PROVIDERS = [
   { id: "claude-code", label: "Claude Code", read: readClaudeCodeActivity },
   { id: "t3code", label: "T3Code", read: readT3CodeActivity },
   { id: "json-status", label: "Status file", read: (options) => readJsonStatusActivity(options.statusFile, options) },
+  { id: "desktop", label: "Desktop", read: readDesktopActivity },
 ];
 
 const PROVIDER_BY_ID = new Map(PROVIDERS.map((provider) => [provider.id, provider]));

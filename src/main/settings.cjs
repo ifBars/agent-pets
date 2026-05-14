@@ -44,7 +44,7 @@ function normalizeSettings(value) {
 }
 
 function normalizeProvider(value) {
-  const valid = new Set(["codex", "opencode", "claude-code", "t3code", "json-status"]);
+  const valid = new Set(["codex", "opencode", "claude-code", "t3code", "json-status", "desktop"]);
   return valid.has(value) ? value : "codex";
 }
 

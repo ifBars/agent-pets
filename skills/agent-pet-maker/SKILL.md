@@ -102,6 +102,16 @@ bun run validate:pet -- C:\path\to\pet-folder
 
 Passing validation only proves the manifest path and atlas dimensions are structurally compatible. It does not replace visual QA.
 
+Clean thin green or purple cut-out halos before the final QA pass:
+
+```bash
+bun run clean:pet-edges -- --pet-dir C:\path\to\pet-folder --in-place
+bun run clean:pet-edges -- --pet-dir C:\path\to\pet-folder --fringe "#7a45ff" --in-place
+bun run clean:pet-edges -- --pet-dir C:\path\to\pet-folder --diagnostic-out C:\path\to\edge-diagnostic.png
+```
+
+Use an explicit `--fringe` color when the pet itself legitimately contains green or purple edge colors. The script creates a `.bak` copy by default when using `--in-place`, and `--diagnostic-out` creates a before/after sheet on checkerboard, black, white, blue, warm, and edge-highlight previews.
+
 Generate contact-sheet QA:
 
 ```bash
@@ -130,6 +140,21 @@ Status schema:
 ```
 
 Use only these states: `idle`, `running`, `waiting`, `failed`, and `review`.
+
+## Desktop-Only Pets
+
+Use desktop-only mode when the user wants a custom AI-made companion pet for normal desktop work, such as writing in Google Docs, building Google Slides, studying, streaming, or playing a game, without connecting the pet to Codex, OpenCode, Claude Code, T3Code, or any status file.
+
+The asset contract is unchanged: create a normal Codex-compatible pet package in `${CODEX_HOME:-$HOME/.codex}/pets/<pet-id>/` with `pet.json` and `spritesheet.webp`.
+
+Launch examples:
+
+```bash
+bun run pets -- --provider desktop --pet my-writing-buddy
+bun run pets -- --provider desktop --pet my-writing-buddy --state waving
+```
+
+In this mode, Agent Pets does not detect active windows, document titles, browser tabs, or game processes. The user controls the pet, size, and animation state manually from the app. Do not add in-app image generation assumptions to the asset workflow; use the pet-generation workflow, validator, and contact-sheet QA first.
 
 ## Acceptance Criteria
 

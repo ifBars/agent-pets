@@ -32,10 +32,10 @@ describe("settings", () => {
     const initial = await readSettings(settingsPath);
     expect(initial.selectedState).toBe("auto");
 
-    const updated = await updateSettings(settingsPath, { selectedState: "review", selectedPetId: "pingu", provider: "claude-code", petSize: 88 });
+    const updated = await updateSettings(settingsPath, { selectedState: "review", selectedPetId: "pingu", provider: "desktop", petSize: 88 });
     expect(updated.selectedState).toBe("review");
     expect(updated.selectedPetId).toBe("pingu");
-    expect(updated.provider).toBe("claude-code");
+    expect(updated.provider).toBe("desktop");
     expect(updated.petSize).toBe(88);
 
     const reread = await readSettings(settingsPath);
@@ -43,10 +43,10 @@ describe("settings", () => {
   });
 
   test("parses isolated user data dir", () => {
-    const args = parseArgs(["--user-data-dir", ".demo/user-data", "--status-file=status.json", "--provider", "opencode", "--pet-size=120"]);
+    const args = parseArgs(["--user-data-dir", ".demo/user-data", "--status-file=status.json", "--provider", "desktop", "--pet-size=120"]);
     expect(args.userDataDir).toBe(".demo/user-data");
     expect(args.statusFile).toBe("status.json");
-    expect(args.provider).toBe("opencode");
+    expect(args.provider).toBe("desktop");
     expect(args.petSize).toBe("120");
   });
 });

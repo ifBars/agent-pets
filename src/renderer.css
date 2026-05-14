@@ -193,6 +193,10 @@ h1 {
   text-align: center;
 }
 
+.status-pill[hidden] {
+  display: none;
+}
+
 .status-pill.running {
   color: rgb(183 255 222);
   border-color: rgb(75 224 157 / 0.5);
