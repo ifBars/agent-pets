@@ -359,6 +359,53 @@ describe("codex activity provider", () => {
     expect(activity.sessions[0].title).toBe("Look into codex's pets use");
   });
 
+  test("prefers real user message title over bootstrap user context", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "agent-pets-codex-bootstrap-title-"));
+    const codexHome = path.join(root, ".codex");
+    const sessionDir = path.join(codexHome, "sessions", "2026", "05", "13");
+    await fs.mkdir(sessionDir, { recursive: true });
+
+    const sessionPath = path.join(sessionDir, "rollout-2026-05-13T23-21-04-019e2525-56d3-7320-8f75-c1d7cc47211e.jsonl");
+    await fs.writeFile(
+      sessionPath,
+      [
+        JSON.stringify({
+          timestamp: "2026-05-14T06:21:05.747Z",
+          type: "session_meta",
+          payload: {
+            id: "019e2525-56d3-7320-8f75-c1d7cc47211e",
+            cwd: "C:\\Users\\ghost\\Documents\\Codex\\2026-05-13\\who-are-you-2",
+          },
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-14T06:21:36.210Z",
+          type: "response_item",
+          payload: {
+            type: "message",
+            role: "user",
+            content: [{ type: "input_text", text: "# AGENTS.md instructions for C:\\Users\\ghost\\Documents\\Codex\\2026-05-13\\who-are-you-2" }],
+          },
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-14T06:21:36.215Z",
+          type: "event_msg",
+          payload: { type: "user_message", message: "who are you\n" },
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-14T06:21:38.731Z",
+          type: "event_msg",
+          payload: { type: "task_complete" },
+        }),
+      ].join("\n"),
+      "utf8",
+    );
+
+    const activity = await readCodexActivity(codexHome, { now: new Date("2026-05-14T06:22:00.000Z") });
+
+    expect(activity.sessions[0].id).toBe("019e2525-56d3-7320-8f75-c1d7cc47211e");
+    expect(activity.sessions[0].title).toBe("who are you");
+  });
+
   test("skips expensive session path lookup for stale index-only rows", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "agent-pets-codex-stale-index-"));
     const codexHome = path.join(root, ".codex");

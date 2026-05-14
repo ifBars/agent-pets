@@ -299,12 +299,23 @@ function summarizePayload(payload: any): string | null {
 function titleFromFirstUserMessage(records: any[]): string | null {
   for (const record of records) {
     const payload = record?.payload;
+    if (!payload || typeof payload !== "object" || payload.type !== "user_message") continue;
+    const title = normalizeCodexTitle(payload.message);
+    if (title && !isBootstrapUserTitle(title)) return title;
+  }
+
+  for (const record of records) {
+    const payload = record?.payload;
     if (!payload || typeof payload !== "object") continue;
-    const text = payload.type === "user_message" ? payload.message : payload.type === "message" && payload.role === "user" ? textFromMessageContent(payload.content) : null;
+    const text = payload.type === "message" && payload.role === "user" ? textFromMessageContent(payload.content) : null;
     const title = normalizeCodexTitle(text);
-    if (title) return title;
+    if (title && !isBootstrapUserTitle(title)) return title;
   }
   return null;
+}
+
+function isBootstrapUserTitle(title: string): boolean {
+  return title.startsWith("# AGENTS.md instructions") || title.startsWith("<environment_context>") || title.startsWith("<INSTRUCTIONS>");
 }
 
 function textFromMessageContent(content: unknown): string | null {
