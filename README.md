@@ -83,6 +83,14 @@ The OpenCode plugin keeps Agent Pets updated with realtime session status. You c
 agent-pets --provider opencode
 ```
 
+T3Code mode can read the live orchestration snapshot from a running T3Code server when you provide an owner bearer session:
+
+```bash
+AGENT_PETS_T3CODE_URL=http://127.0.0.1:3773 AGENT_PETS_T3CODE_BEARER_TOKEN=... agent-pets --provider t3code
+```
+
+Without those values it falls back to the T3Code CLI session list, then local read-only app data for composer draft activity.
+
 ## Custom Pets
 
 Pets use the Codex pet package shape: a `pet.json` manifest plus a transparent spritesheet.

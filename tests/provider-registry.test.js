@@ -14,6 +14,7 @@ describe("provider registry", () => {
     expect(providers.find((provider) => provider.id === "json-status").requiresStatusFile).toBe(true);
     expect(providers.find((provider) => provider.id === "desktop").defaultRefreshMs).toBe(30000);
     expect(providers.find((provider) => provider.id === "opencode").modes).toContain("bridge-file");
+    expect(providers.find((provider) => provider.id === "t3code").modes).toContain("http");
   });
 
   test("normalizes unknown providers to codex", () => {

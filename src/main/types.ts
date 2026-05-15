@@ -59,6 +59,9 @@ export interface ProviderReadOptions {
   projectsRoot?: string;
   commands?: string[];
   roots?: string[];
+  t3codeUrl?: string;
+  t3codeBearerToken?: string;
+  t3codeToken?: string;
 }
 
 export interface ProviderMetadata {

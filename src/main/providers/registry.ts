@@ -25,9 +25,9 @@ export const PROVIDER_METADATA: ProviderMetadata[] = [
   {
     id: "t3code",
     label: "T3Code",
-    modes: ["command", "jsonl"],
+    modes: ["http", "command", "jsonl"],
     defaultRefreshMs: 8000,
-    setupHint: "Uses T3Code session commands first, with local read-only app-data fallback.",
+    setupHint: "Reads a T3Code orchestration snapshot when configured, with CLI and local read-only app-data fallback.",
   },
   {
     id: "json-status",
