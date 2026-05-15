@@ -27,6 +27,9 @@ const ACTIVE_REFRESH_MS = 3000;
 const IDLE_REFRESH_MS = 8000;
 const DESKTOP_REFRESH_MS = 30000;
 const DRAG_MOVE_MIN_MS = 16;
+const ROAM_MIN_DELAY_MS = 6000;
+const ROAM_MAX_DELAY_MS = 14000;
+const ROAM_SPEED_PX_PER_SECOND = 90;
 
 const params = new URLSearchParams(location.search);
 const codexHome = params.get("codexHome") || "";
@@ -45,6 +48,7 @@ let refreshInFlight = false;
 let refreshQueued = false;
 let ignoringMouseEvents = null;
 let petDragging = false;
+let suppressNextPetClick = false;
 let lastDragScreenX = 0;
 let lastDragScreenY = 0;
 let pendingDragDeltaX = 0;
@@ -52,8 +56,20 @@ let pendingDragDeltaY = 0;
 let lastDragMoveAt = 0;
 let refreshTimer = null;
 let lastActivityState = "idle";
+let lastActivityPetState = "idle";
 let providers = [];
 let providerById = new Map();
+let desktopRoamingEnabled = false;
+let desktopRoamingRadius = 96;
+let roamOffsetX = 0;
+let roamOffsetY = 0;
+let roamTarget = null;
+let roamTimer = null;
+let roamAnimationFrame = null;
+let roamLastStepAt = 0;
+let interactionTimer = null;
+let temporaryReactionActive = false;
+let settingsRepositionFrame = null;
 
 const petElement = document.getElementById("pet");
 const petStage = document.querySelector(".pet-stage");
@@ -67,6 +83,10 @@ const providerSelect = document.getElementById("providerSelect");
 const statusFileInput = document.getElementById("statusFileInput");
 const statusFileRow = document.getElementById("statusFileRow");
 const petSizeInput = document.getElementById("petSizeInput");
+const roamingToggleRow = document.getElementById("roamingToggleRow");
+const roamingToggle = document.getElementById("roamingToggle");
+const roamingRadiusInput = document.getElementById("roamingRadiusInput");
+const roamingRadiusRow = document.getElementById("roamingRadiusRow");
 const activeTitle = document.getElementById("activeTitle");
 const activeDetail = document.getElementById("activeDetail");
 const activeDot = document.getElementById("activeDot");
@@ -103,7 +123,7 @@ function setRequestedState(state) {
   requestedState = state;
   stateSelect.value = state;
   window.codexPets.updateSettings({ selectedState: state }).catch(console.error);
-  if (state !== "auto") setState(state);
+  applyBaseState();
 }
 
 function startAnimation(state) {
@@ -142,7 +162,8 @@ async function refreshActivity() {
   try {
     const activity = await window.codexPets.readActivity({ codexHome, statusFile, provider });
     renderActivity(activity);
-    if (requestedState === "auto") setState(activity.petState || "idle");
+    lastActivityPetState = activity.petState || "idle";
+    applyBaseState();
   } finally {
     refreshInFlight = false;
     if (refreshQueued) {
@@ -177,7 +198,7 @@ function renderActivity(activity) {
   statusPill.className = `status-pill ${activity.state || "idle"}`;
 
   sessionList.textContent = "";
-  const visibleSessions = isDesktop ? [] : sessions.filter((session) => !isSameSession(session, active)).slice(0, 3);
+  const visibleSessions = isDesktop ? [] : sessions.filter((session) => !isSameSession(session, active) && isBadgeSession(session)).slice(0, 3);
   const summary = isDesktop ? "" : active ? statusText(active) : `No active ${labelForSource(activity.source)} activity`;
   activeDetail.hidden = !summary;
   activeDetail.textContent = summary;
@@ -211,6 +232,7 @@ function renderActivity(activity) {
     sessionList.append(item);
   }
   if (popoverOpen) positionPopover(threadPopover);
+  updateDesktopRoamingAvailability();
 }
 
 function isSameSession(left, right) {
@@ -284,12 +306,16 @@ async function boot() {
     selectedState: "auto",
     provider: "codex",
     petSize: 112,
+    desktopRoamingEnabled: false,
+    desktopRoamingRadius: 96,
     statusFile: "",
   }));
   statusFile = statusFile || settings.statusFile || "";
   provider = provider || settings.provider || "codex";
   if (!providerById.has(provider)) provider = "codex";
   petSize = petSize || settings.petSize || 112;
+  desktopRoamingEnabled = settings.desktopRoamingEnabled === true;
+  desktopRoamingRadius = normalizeRoamingRadius(settings.desktopRoamingRadius);
   requestedState = initialState || settings.selectedState || "auto";
   pets = await window.codexPets.listPets(codexHome);
   petSelect.textContent = "";
@@ -303,7 +329,10 @@ async function boot() {
   statusFileInput.value = statusFile;
   providerSelect.value = provider;
   petSizeInput.value = String(petSize);
+  roamingToggle.checked = desktopRoamingEnabled;
+  roamingRadiusInput.value = String(desktopRoamingRadius);
   applyPetSize(petSize);
+  updateRoamingControls();
   stateSelect.value = requestedState;
   updateProviderControls();
   setState(requestedState === "auto" ? "idle" : requestedState);
@@ -371,10 +400,13 @@ function updateMousePassthrough(event) {
 
 function beginPetDrag(event) {
   if (event.button !== 0) return;
+  if (isControlEventTarget(event.target)) return;
   petDragging = true;
+  cancelRoamMovement();
   lastDragScreenX = event.screenX;
   lastDragScreenY = event.screenY;
   petStage.classList.add("is-dragging");
+  if (isDesktopProvider()) setState("waiting");
   setWindowMousePassthrough(false);
   event.preventDefault();
 }
@@ -406,8 +438,22 @@ function endPetDrag(event) {
   if (!petDragging) return;
   flushPetDrag(true);
   petDragging = false;
+  suppressNextPetClick = true;
+  window.setTimeout(() => {
+    suppressNextPetClick = false;
+  }, 0);
   petStage.classList.remove("is-dragging");
+  resetRoamHomeAnchor();
+  if (isDesktopProvider()) playTemporaryReaction("review", 700);
   updateMousePassthrough(event);
+}
+
+function isDesktopProvider() {
+  return provider === "desktop";
+}
+
+function isControlEventTarget(target) {
+  return Boolean(target?.closest?.("button, input, select, textarea"));
 }
 
 function setPopoverOpen(value) {
@@ -417,6 +463,7 @@ function setPopoverOpen(value) {
   threadPopover.classList.toggle("is-open", popoverOpen);
   threadPopover.setAttribute("aria-hidden", String(!popoverOpen));
   if (popoverOpen) positionPopover(threadPopover);
+  updateDesktopRoamingAvailability();
 }
 
 function setSettingsOpen(value) {
@@ -426,6 +473,11 @@ function setSettingsOpen(value) {
   settingsPopover.classList.toggle("is-open", settingsOpen);
   settingsPopover.setAttribute("aria-hidden", String(!settingsOpen));
   if (settingsOpen) positionPopover(settingsPopover);
+  else if (settingsRepositionFrame) {
+    window.cancelAnimationFrame(settingsRepositionFrame);
+    settingsRepositionFrame = null;
+  }
+  updateDesktopRoamingAvailability();
 }
 
 function applyPetSize(value) {
@@ -434,6 +486,131 @@ function applyPetSize(value) {
   petSizeInput.value = String(petSize);
   if (popoverOpen) positionPopover(threadPopover);
   if (settingsOpen) positionPopover(settingsPopover);
+}
+
+function normalizeRoamingRadius(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return 96;
+  return Math.min(180, Math.max(48, Math.round(parsed)));
+}
+
+function applyBaseState() {
+  if (petDragging || roamTarget || temporaryReactionActive) return;
+  setState(requestedState === "auto" ? lastActivityPetState || "idle" : requestedState);
+}
+
+function playTemporaryReaction(state, durationMs) {
+  if (petDragging) return;
+  cancelRoamMovement();
+  if (interactionTimer) window.clearTimeout(interactionTimer);
+  temporaryReactionActive = true;
+  setState(state);
+  interactionTimer = window.setTimeout(() => {
+    temporaryReactionActive = false;
+    interactionTimer = null;
+    applyBaseState();
+    scheduleRoam();
+  }, durationMs);
+}
+
+function updateRoamingControls() {
+  const desktopControlsVisible = provider === "desktop";
+  roamingToggleRow.hidden = !desktopControlsVisible;
+  roamingToggle.checked = desktopRoamingEnabled;
+  roamingRadiusInput.value = String(desktopRoamingRadius);
+  roamingRadiusRow.hidden = !desktopControlsVisible || !desktopRoamingEnabled;
+  queueSettingsReposition();
+  updateDesktopRoamingAvailability();
+}
+
+function queueSettingsReposition() {
+  if (!settingsOpen || settingsRepositionFrame) return;
+  settingsRepositionFrame = window.requestAnimationFrame(() => {
+    settingsRepositionFrame = null;
+    if (settingsOpen) positionSettingsPopover();
+  });
+}
+
+function updateDesktopRoamingAvailability() {
+  if (provider !== "desktop" || !desktopRoamingEnabled) {
+    cancelRoamMovement();
+    return;
+  }
+  scheduleRoam();
+}
+
+function scheduleRoam() {
+  if (roamTimer) window.clearTimeout(roamTimer);
+  roamTimer = null;
+  if (provider !== "desktop" || !desktopRoamingEnabled || petDragging || settingsOpen || popoverOpen || temporaryReactionActive) return;
+  const delay = ROAM_MIN_DELAY_MS + Math.random() * (ROAM_MAX_DELAY_MS - ROAM_MIN_DELAY_MS);
+  roamTimer = window.setTimeout(startRoamMovement, delay);
+}
+
+function startRoamMovement() {
+  roamTimer = null;
+  if (provider !== "desktop" || !desktopRoamingEnabled || petDragging || settingsOpen || popoverOpen || temporaryReactionActive) {
+    scheduleRoam();
+    return;
+  }
+  roamTarget = pickRoamTarget();
+  roamLastStepAt = performance.now();
+  stepRoamMovement(roamLastStepAt);
+}
+
+function pickRoamTarget() {
+  const angle = Math.random() * Math.PI * 2;
+  const distance = 18 + Math.random() * Math.max(0, desktopRoamingRadius - 18);
+  return {
+    x: Math.round(Math.cos(angle) * distance),
+    y: Math.round(Math.sin(angle) * distance),
+  };
+}
+
+function stepRoamMovement(now) {
+  roamAnimationFrame = null;
+  if (!roamTarget || petDragging) {
+    cancelRoamMovement();
+    return;
+  }
+  const elapsedSeconds = Math.min(0.12, Math.max(0.016, (now - roamLastStepAt) / 1000));
+  roamLastStepAt = now;
+  const remainingX = roamTarget.x - roamOffsetX;
+  const remainingY = roamTarget.y - roamOffsetY;
+  const distance = Math.hypot(remainingX, remainingY);
+  if (distance < 1) {
+    roamOffsetX = roamTarget.x;
+    roamOffsetY = roamTarget.y;
+    roamTarget = null;
+    applyBaseState();
+    scheduleRoam();
+    return;
+  }
+
+  const stepDistance = Math.min(distance, ROAM_SPEED_PX_PER_SECOND * elapsedSeconds);
+  const deltaX = (remainingX / distance) * stepDistance;
+  const deltaY = (remainingY / distance) * stepDistance;
+  roamOffsetX += deltaX;
+  roamOffsetY += deltaY;
+  setState(deltaX > 0.25 ? "running-right" : deltaX < -0.25 ? "running-left" : "running");
+  window.codexPets.moveWindowBy(deltaX, deltaY, { clampToWorkArea: true });
+  roamAnimationFrame = window.requestAnimationFrame(stepRoamMovement);
+}
+
+function cancelRoamMovement() {
+  if (roamTimer) window.clearTimeout(roamTimer);
+  if (roamAnimationFrame) window.cancelAnimationFrame(roamAnimationFrame);
+  roamTimer = null;
+  roamAnimationFrame = null;
+  roamTarget = null;
+}
+
+function resetRoamHomeAnchor() {
+  cancelRoamMovement();
+  roamOffsetX = 0;
+  roamOffsetY = 0;
+  applyBaseState();
+  scheduleRoam();
 }
 
 function positionPopover(popover) {
@@ -578,6 +755,7 @@ stateSelect.addEventListener("change", () => setRequestedState(stateSelect.value
 providerSelect.addEventListener("change", () => {
   provider = providerSelect.value;
   updateProviderControls();
+  updateRoamingControls();
   window.codexPets.updateSettings({ provider }).catch(console.error);
   if (refreshTimer) window.clearTimeout(refreshTimer);
   refreshActivity().catch(console.error);
@@ -588,12 +766,36 @@ petSizeInput.addEventListener("input", () => {
 petSizeInput.addEventListener("change", () => {
   window.codexPets.updateSettings({ petSize }).catch(console.error);
 });
+roamingToggle.addEventListener("change", () => {
+  desktopRoamingEnabled = roamingToggle.checked;
+  window.codexPets.updateSettings({ desktopRoamingEnabled }).catch(console.error);
+  updateRoamingControls();
+});
+roamingRadiusInput.addEventListener("input", () => {
+  desktopRoamingRadius = normalizeRoamingRadius(roamingRadiusInput.value);
+  roamingRadiusInput.value = String(desktopRoamingRadius);
+});
+roamingRadiusInput.addEventListener("change", () => {
+  desktopRoamingRadius = normalizeRoamingRadius(roamingRadiusInput.value);
+  window.codexPets.updateSettings({ desktopRoamingRadius }).catch(console.error);
+  resetRoamHomeAnchor();
+});
 statusFileInput.addEventListener("change", () => {
   statusFile = statusFileInput.value.trim();
   window.codexPets.updateSettings({ statusFile }).catch(console.error);
   refreshActivity().catch(console.error);
 });
-petElement.addEventListener("dblclick", () => setState("waving"));
+petStage.addEventListener("click", (event) => {
+  if (suppressNextPetClick) return;
+  if (!isDesktopProvider() || isControlEventTarget(event.target)) return;
+  if (event.detail > 1) return;
+  playTemporaryReaction("waiting", 900);
+});
+petStage.addEventListener("dblclick", (event) => {
+  if (suppressNextPetClick) return;
+  if (!isDesktopProvider() || isControlEventTarget(event.target)) return;
+  playTemporaryReaction("review", 1200);
+});
 petStage.addEventListener("mousedown", beginPetDrag);
 threadBadge.addEventListener("click", () => setPopoverOpen(!popoverOpen));
 settingsButton.addEventListener("click", () => setSettingsOpen(!settingsOpen));
@@ -603,8 +805,15 @@ window.addEventListener("mousemove", (event) => {
 });
 window.addEventListener("mouseleave", () => {
   flushPetDrag(true);
+  if (petDragging) {
+    suppressNextPetClick = true;
+    window.setTimeout(() => {
+      suppressNextPetClick = false;
+    }, 0);
+  }
   petDragging = false;
   petStage.classList.remove("is-dragging");
+  resetRoamHomeAnchor();
   setWindowMousePassthrough(true);
 });
 window.addEventListener("mousedown", () => setWindowMousePassthrough(false));
@@ -620,6 +829,10 @@ window.addEventListener("resize", () => {
   if (popoverOpen) positionPopover(threadPopover);
   if (settingsOpen) positionPopover(settingsPopover);
 });
+if (window.ResizeObserver) {
+  const settingsResizeObserver = new ResizeObserver(() => queueSettingsReposition());
+  settingsResizeObserver.observe(settingsPopover);
+}
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) refreshActivity().catch(console.error);
 });

@@ -28,6 +28,7 @@ describe("renderer layout", () => {
     expect(css).not.toContain("-webkit-app-region: drag");
     expect(renderer).toContain("beginPetDrag");
     expect(renderer).toContain("moveWindowBy(deltaX, deltaY)");
+    expect(renderer).toContain("moveWindowBy(deltaX, deltaY, { clampToWorkArea: true })");
     expect(preload).toContain("moveWindowBy");
     expect(main).toContain('ipcMain.on("window:move-by"');
     expect(css).toContain("width: min(300px, calc(100vw - 24px))");
@@ -47,6 +48,7 @@ describe("renderer layout", () => {
     const renderer = fs.readFileSync(path.join(__dirname, "..", "src", "renderer.js"), "utf8");
 
     expect(renderer).toContain("sessions.filter(isBadgeSession).length");
+    expect(renderer).toContain("!isSameSession(session, active) && isBadgeSession(session)");
     expect(renderer).toContain('session?.state === "running"');
     expect(renderer).toContain('session?.state === "waiting"');
     expect(renderer).toContain('session?.state === "failed"');
@@ -109,6 +111,38 @@ describe("renderer layout", () => {
     expect(renderer).toContain("scheduleNextRefresh");
     expect(renderer).toContain("flushPetDrag(false)");
     expect(renderer).not.toContain("window.setInterval(() => refreshActivity");
+  });
+
+  test("desktop roaming is opt-in and uses existing animation rows", () => {
+    const html = fs.readFileSync(path.join(__dirname, "..", "src", "renderer.html"), "utf8");
+    const renderer = fs.readFileSync(path.join(__dirname, "..", "src", "renderer.js"), "utf8");
+    const settings = fs.readFileSync(path.join(__dirname, "..", "src", "main", "settings.ts"), "utf8");
+    const main = fs.readFileSync(path.join(__dirname, "..", "src", "main.ts"), "utf8");
+
+    expect(html).toContain('id="roamingToggle"');
+    expect(html).toContain('id="roamingToggleRow"');
+    expect(html).toContain('id="roamingRadiusInput"');
+    expect(settings).toContain("desktopRoamingEnabled: false");
+    expect(settings).toContain("desktopRoamingRadius: 96");
+    expect(renderer).toContain("function scheduleRoam()");
+    expect(renderer).toContain('const desktopControlsVisible = provider === "desktop"');
+    expect(renderer).toContain("roamingToggleRow.hidden = !desktopControlsVisible");
+    expect(renderer).toContain("roamingRadiusRow.hidden = !desktopControlsVisible || !desktopRoamingEnabled");
+    expect(renderer).toContain("function queueSettingsReposition()");
+    expect(renderer).toContain("window.ResizeObserver");
+    expect(renderer).toContain("settingsResizeObserver.observe(settingsPopover)");
+    expect(renderer).toContain('provider !== "desktop" || !desktopRoamingEnabled');
+    expect(renderer).toContain('playTemporaryReaction("waiting", 900)');
+    expect(renderer).toContain('playTemporaryReaction("review", 1200)');
+    expect(renderer).toContain('petStage.addEventListener("click"');
+    expect(renderer).toContain('petStage.addEventListener("dblclick"');
+    expect(renderer).toContain('isControlEventTarget(event.target)');
+    expect(renderer).toContain('if (isDesktopProvider()) setState("waiting")');
+    expect(renderer).toContain('if (isDesktopProvider()) playTemporaryReaction("review", 700)');
+    expect(renderer).toContain('setState(deltaX > 0.25 ? "running-right" : deltaX < -0.25 ? "running-left" : "running")');
+    expect(renderer).not.toContain("speech");
+    expect(main).toContain("screen.getDisplayMatching(bounds)");
+    expect(main).toContain("win.setPosition(nextX, nextY, false)");
   });
 
   test("provider select is populated from registry metadata", () => {

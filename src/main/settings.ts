@@ -8,6 +8,8 @@ export const DEFAULT_SETTINGS: Settings = {
   selectedState: "auto",
   provider: "codex",
   petSize: 112,
+  desktopRoamingEnabled: false,
+  desktopRoamingRadius: 96,
   statusFile: "",
   windowBounds: null,
 };
@@ -43,6 +45,8 @@ export function normalizeSettings(value: unknown): Settings {
     selectedState: normalizeState(input.selectedState),
     provider: normalizeProvider(input.provider),
     petSize: normalizePetSize(input.petSize),
+    desktopRoamingEnabled: input.desktopRoamingEnabled === true,
+    desktopRoamingRadius: normalizeDesktopRoamingRadius(input.desktopRoamingRadius),
     statusFile: cleanString(input.statusFile),
     windowBounds: normalizeBounds(input.windowBounds),
   };
@@ -52,6 +56,12 @@ export function normalizePetSize(value: unknown): number {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return DEFAULT_SETTINGS.petSize;
   return Math.min(160, Math.max(72, Math.round(parsed)));
+}
+
+export function normalizeDesktopRoamingRadius(value: unknown): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return DEFAULT_SETTINGS.desktopRoamingRadius;
+  return Math.min(180, Math.max(48, Math.round(parsed)));
 }
 
 function normalizeState(value: unknown): PetAnimationState {

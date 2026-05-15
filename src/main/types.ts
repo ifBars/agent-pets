@@ -86,6 +86,8 @@ export interface Settings {
   selectedState: PetAnimationState;
   provider: ProviderId;
   petSize: number;
+  desktopRoamingEnabled: boolean;
+  desktopRoamingRadius: number;
   statusFile: string;
   windowBounds: WindowBounds | null;
 }

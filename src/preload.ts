@@ -8,5 +8,5 @@ contextBridge.exposeInMainWorld("codexPets", {
   getSettings: () => ipcRenderer.invoke("settings:get"),
   updateSettings: (patch: Record<string, unknown>) => ipcRenderer.invoke("settings:update", patch),
   setIgnoreMouseEvents: (ignore: boolean, options?: { forward?: boolean }) => ipcRenderer.send("window:set-ignore-mouse-events", ignore, options),
-  moveWindowBy: (deltaX: number, deltaY: number) => ipcRenderer.send("window:move-by", deltaX, deltaY),
+  moveWindowBy: (deltaX: number, deltaY: number, options?: { clampToWorkArea?: boolean }) => ipcRenderer.send("window:move-by", deltaX, deltaY, options),
 });

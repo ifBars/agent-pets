@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, Tray, type IpcMainInvokeEvent } from "electron";
+import { app, BrowserWindow, ipcMain, Menu, screen, Tray, type IpcMainInvokeEvent } from "electron";
 import * as path from "node:path";
 import { readActivity } from "./main/activity";
 import { readPets } from "./main/pet-store";
@@ -177,12 +177,25 @@ export function registerIpcHandlers(): void {
     if (!win || win.isDestroyed()) return;
     win.setIgnoreMouseEvents(Boolean(ignore), ignore ? options : undefined);
   });
-  ipcMain.on("window:move-by", (event, deltaX: number, deltaY: number) => {
+  ipcMain.on("window:move-by", (event, deltaX: number, deltaY: number, options?: { clampToWorkArea?: boolean }) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win || win.isDestroyed()) return;
-    const [x, y] = win.getPosition();
-    win.setPosition(Math.round(x + Number(deltaX || 0)), Math.round(y + Number(deltaY || 0)), false);
+    const bounds = win.getBounds();
+    let nextX = Math.round(bounds.x + Number(deltaX || 0));
+    let nextY = Math.round(bounds.y + Number(deltaY || 0));
+    if (options?.clampToWorkArea) {
+      const display = screen.getDisplayMatching(bounds);
+      const workArea = display.workArea;
+      nextX = clamp(nextX, workArea.x, workArea.x + workArea.width - bounds.width);
+      nextY = clamp(nextY, workArea.y, workArea.y + workArea.height - bounds.height);
+    }
+    win.setPosition(nextX, nextY, false);
   });
+}
+
+function clamp(value: number, min: number, max: number): number {
+  if (max < min) return min;
+  return Math.min(max, Math.max(min, value));
 }
 
 if (process.versions.electron && (process as any).type === "browser") {

@@ -12,6 +12,8 @@ describe("settings", () => {
       selectedState: "thinking",
       provider: "unknown",
       petSize: 999,
+      desktopRoamingEnabled: "yes",
+      desktopRoamingRadius: 999,
       statusFile: " status.json ",
       windowBounds: { width: 100, height: 100 },
     });
@@ -20,6 +22,8 @@ describe("settings", () => {
     expect(settings.selectedState).toBe("auto");
     expect(settings.provider).toBe("codex");
     expect(settings.petSize).toBe(160);
+    expect(settings.desktopRoamingEnabled).toBe(false);
+    expect(settings.desktopRoamingRadius).toBe(180);
     expect(settings.statusFile).toBe("status.json");
     expect(settings.windowBounds.width).toBe(220);
     expect(settings.windowBounds.height).toBe(460);
@@ -32,14 +36,24 @@ describe("settings", () => {
     const initial = await readSettings(settingsPath);
     expect(initial.selectedState).toBe("auto");
 
-    const updated = await updateSettings(settingsPath, { selectedState: "review", selectedPetId: "pingu", provider: "desktop", petSize: 88 });
+    const updated = await updateSettings(settingsPath, {
+      selectedState: "review",
+      selectedPetId: "pingu",
+      provider: "desktop",
+      petSize: 88,
+      desktopRoamingEnabled: true,
+      desktopRoamingRadius: 120,
+    });
     expect(updated.selectedState).toBe("review");
     expect(updated.selectedPetId).toBe("pingu");
     expect(updated.provider).toBe("desktop");
     expect(updated.petSize).toBe(88);
+    expect(updated.desktopRoamingEnabled).toBe(true);
+    expect(updated.desktopRoamingRadius).toBe(120);
 
     const reread = await readSettings(settingsPath);
     expect(reread.selectedState).toBe("review");
+    expect(reread.desktopRoamingEnabled).toBe(true);
   });
 
   test("parses isolated user data dir", () => {
