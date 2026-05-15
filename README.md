@@ -1,11 +1,12 @@
 # Agent Pets
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@ifbars/agent-pets"><img src="https://img.shields.io/npm/v/%40ifbars%2Fagent-pets?label=npm" alt="npm package" /></a>
+  <a href="https://www.npmjs.com/package/@ifbars/agent-pets"><img src="https://img.shields.io/npm/v/%40ifbars%2Fagent-pets?label=npm" alt="@ifbars/agent-pets npm package version" /></a>
+  <a href="https://www.npmjs.com/package/opencode-agent-pets"><img src="https://img.shields.io/npm/v/opencode-agent-pets?label=opencode%20plugin" alt="opencode-agent-pets npm package version" /></a>
   <a href="https://github.com/ifBars/agent-pets/releases"><img src="https://img.shields.io/github/v/release/ifBars/agent-pets?label=release" alt="GitHub release" /></a>
   <a href="https://github.com/ifBars/agent-pets/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ifBars/agent-pets/ci.yml?branch=main&label=ci" alt="CI status" /></a>
   <a href="https://github.com/ifBars/agent-pets/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/ifBars/agent-pets/release.yml?branch=main&label=release%20workflow" alt="Release workflow status" /></a>
-  <a href="https://www.npmjs.com/package/opencode-agent-pets"><img src="https://img.shields.io/npm/v/opencode-agent-pets?label=opencode%20plugin" alt="OpenCode plugin package" /></a>
+  
   <a href="LICENSE"><img src="https://img.shields.io/github/license/ifBars/agent-pets" alt="License" /></a>
 </p>
 
@@ -45,6 +46,11 @@ agent-pets --provider desktop --pet pingu
 ```
 
 Prefer an app binary? Download the latest Windows, macOS, or Linux build from [GitHub Releases](https://github.com/ifBars/agent-pets/releases).
+
+## Package Names
+
+- `@ifbars/agent-pets` is the main desktop app and CLI package.
+- `opencode-agent-pets` is the companion OpenCode plugin package.
 
 ## OpenCode
 
