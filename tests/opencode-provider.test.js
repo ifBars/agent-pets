@@ -142,6 +142,67 @@ describe("opencode activity provider", () => {
     expect(activity.sessions).toHaveLength(1);
   });
 
+  test("lets opencode database completion correct a generic running bridge row", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "agent-pets-opencode-complete-"));
+    const bridgeFile = path.join(dir, "opencode.json");
+    await fs.writeFile(
+      bridgeFile,
+      JSON.stringify({
+        provider: "opencode",
+        sessions: [
+          {
+            id: "oc-complete",
+            title: "OpenCode session",
+            cwd: "C:\\Users\\ghost",
+            state: "running",
+            detail: "message updated",
+            updatedAt: "2026-05-13T10:20:00.010Z",
+          },
+        ],
+      }),
+    );
+
+    const activity = await readOpenCodeActivity({
+      now: new Date("2026-05-13T10:20:01.000Z"),
+      bridgeFile,
+      runner: async () => [
+        {
+          id: "oc-complete",
+          title: "What is OpenCode",
+          directory: "C:\\Users\\ghost",
+          project_id: "global",
+          time_updated: new Date("2026-05-13T10:20:00.000Z").getTime(),
+          message_data: JSON.stringify({ role: "user", time: { created: new Date("2026-05-13T10:19:50.000Z").getTime() } }),
+          part_data: JSON.stringify({ type: "step-finish", reason: "stop" }),
+        },
+      ],
+    });
+
+    expect(activity.state).toBe("review");
+    expect(activity.active.title).toBe("What is OpenCode");
+    expect(activity.active.latestEvent).toBe("finished: stop");
+  });
+
+  test("hides stale opencode database sessions instead of showing gray idle chats", async () => {
+    const activity = await readOpenCodeActivity({
+      now: new Date("2026-05-13T11:00:00.000Z"),
+      bridgeFile: await isolatedBridgeFile(),
+      runner: async () => [
+        {
+          id: "oc-stale",
+          title: "Old OpenCode chat",
+          time_updated: new Date("2026-05-13T10:00:00.000Z").getTime(),
+          message_data: JSON.stringify({ role: "user", time: { created: new Date("2026-05-13T09:59:50.000Z").getTime() } }),
+          part_data: JSON.stringify({ type: "step-finish", reason: "stop" }),
+        },
+      ],
+    });
+
+    expect(activity.state).toBe("idle");
+    expect(activity.active).toBeNull();
+    expect(activity.sessions).toHaveLength(0);
+  });
+
   test("uses generated database title when bridge still has placeholder title", () => {
     const merged = mergeOpenCodeSessions(
       [

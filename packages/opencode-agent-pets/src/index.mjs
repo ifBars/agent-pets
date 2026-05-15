@@ -61,7 +61,7 @@ export function normalizeEvent(event, context = {}) {
     return { ...base, state: mapStatus(status), detail: status ? `session ${status}` : "session status" };
   }
   if (event.type === "message.updated" || event.type === "message.part.updated") {
-    return { ...base, state: "running", detail: event.type === "message.updated" ? "message updated" : "message part updated" };
+    return { ...base, ...messageEventStatus(event.type, properties) };
   }
   return null;
 }
@@ -119,6 +119,18 @@ function isOpenCodePlaceholderTitle(value) {
   return title === "opencode session" || /^opencode session \d+$/.test(title);
 }
 
+function messageEventStatus(eventType, properties) {
+  const message = parseJsonObject(properties.message) || parseJsonObject(properties.messageData) || parseJsonObject(properties.data);
+  const part = parseJsonObject(properties.part) || parseJsonObject(properties.partData);
+  if (message?.error || part?.error) return { state: "failed", detail: "message error" };
+  if (part?.type === "step-finish") {
+    if (part.reason === "error" || part.reason === "failed") return { state: "failed", detail: part.reason ? `finished: ${part.reason}` : "finished" };
+    if (part.reason === "stop") return { state: "review", detail: "finished: stop" };
+  }
+  if (message?.time?.completed || message?.finish === "stop") return { state: "review", detail: "assistant response" };
+  return { state: "running", detail: eventType === "message.updated" ? "message updated" : "message part updated" };
+}
+
 function mapStatus(status) {
   const value = cleanString(status)?.toLowerCase() || "";
   if (VALID_STATES.has(value)) return value;
@@ -139,4 +151,16 @@ function timestampString(value) {
   if (!Number.isFinite(timestamp)) return null;
   const date = new Date(timestamp);
   return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+}
+
+function parseJsonObject(value) {
+  if (value && typeof value === "object") return value;
+  const text = cleanString(value);
+  if (!text) return null;
+  try {
+    const parsed = JSON.parse(text);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
 }

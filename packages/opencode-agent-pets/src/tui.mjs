@@ -62,18 +62,17 @@ export async function toggleAgentPets(options = {}) {
     return { state: "stopped", message: "Agent Pets closed" };
   }
 
-  const command = cleanString(options.command) || "bun";
-  const args = Array.isArray(options.args) ? options.args.map(String) : ["run", "agent-pets", "--", "--provider", "opencode"];
-  const cwd = cleanString(options.cwd) || defaultRepoRoot();
-  const child = spawn(command, args, {
-    cwd,
+  const launch = await resolveLaunchOptions(options);
+  const child = spawn(launch.command, launch.args, {
+    cwd: launch.cwd,
     detached: true,
     stdio: "ignore",
     windowsHide: true,
   });
-  child.unref();
+  await waitForLaunch(child);
   await fs.mkdir(path.dirname(pidFile), { recursive: true });
   await fs.writeFile(pidFile, `${child.pid}\n`, "utf8");
+  child.unref();
   return { state: "started", message: "Agent Pets opened" };
 }
 
@@ -123,10 +122,72 @@ function stopProcess(pid) {
   return Promise.resolve();
 }
 
-function cleanString(value) {
-  return typeof value === "string" && value.trim() ? value.trim() : null;
+export async function resolveLaunchOptions(options = {}) {
+  const command = cleanString(options.command);
+  const args = Array.isArray(options.args) ? options.args.map(String) : null;
+  const cwd = cleanString(options.cwd);
+  if (command || args || cwd) {
+    return {
+      command: command || "bun",
+      args: args || ["x", "@ifbars/agent-pets", "--provider", "opencode"],
+      cwd: cwd || os.homedir(),
+    };
+  }
+
+  const repoRoot = await findPackageRoot("@ifbars/agent-pets", cleanString(options.packageRootStartDir) || undefined);
+  if (repoRoot) {
+    return {
+      command: "bun",
+      args: ["run", "agent-pets", "--", "--provider", "opencode"],
+      cwd: repoRoot,
+    };
+  }
+
+  return {
+    command: "bun",
+    args: ["x", "@ifbars/agent-pets", "--provider", "opencode"],
+    cwd: os.homedir(),
+  };
 }
 
-function defaultRepoRoot() {
-  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+async function waitForLaunch(child) {
+  await new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (callback, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      child.off("error", onError);
+      child.off("exit", onExit);
+      callback(value);
+    };
+    const onError = (error) => finish(reject, error);
+    const onExit = (code, signal) => {
+      const detail = signal ? `signal ${signal}` : `code ${code}`;
+      finish(reject, new Error(`Agent Pets exited before opening (${detail})`));
+    };
+    const timer = setTimeout(() => finish(resolve), 750);
+    child.once("error", onError);
+    child.once("exit", onExit);
+  });
+}
+
+async function findPackageRoot(packageName, startDir = path.dirname(fileURLToPath(import.meta.url))) {
+  let current = path.resolve(startDir);
+  while (true) {
+    const packageJson = path.join(current, "package.json");
+    try {
+      const manifest = JSON.parse(await fs.readFile(packageJson, "utf8"));
+      if (manifest?.name === packageName) return current;
+    } catch {
+      // Keep walking up until we find the app package or hit the filesystem root.
+    }
+    const parent = path.dirname(current);
+    if (parent === current) return null;
+    current = parent;
+  }
+}
+
+function cleanString(value) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
 }

@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
-import { AgentPetsOpenCodeTuiPlugin } from "../packages/opencode-agent-pets/src/tui.mjs";
+import { AgentPetsOpenCodeTuiPlugin, resolveLaunchOptions } from "../packages/opencode-agent-pets/src/tui.mjs";
 import opencodeTuiPlugin from "../packages/opencode-agent-pets/src/opencode-tui.mjs";
 
 describe("opencode agent pets tui plugin", () => {
@@ -82,5 +83,24 @@ describe("opencode agent pets tui plugin", () => {
 
     expect(source).toContain('["run", "agent-pets", "--", "--provider", "opencode"]');
     expect(source).not.toContain('["run", "pets", "--"');
+  });
+
+  test("uses the repo launcher from a local checkout", async () => {
+    await expect(resolveLaunchOptions()).resolves.toMatchObject({
+      command: "bun",
+      args: ["run", "agent-pets", "--", "--provider", "opencode"],
+      cwd: path.join(import.meta.dir, ".."),
+    });
+  });
+
+  test("uses the published app package when no local checkout is present", async () => {
+    const packageDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-pets-plugin-package-"));
+    fs.writeFileSync(path.join(packageDir, "package.json"), JSON.stringify({ name: "opencode-agent-pets" }));
+
+    await expect(resolveLaunchOptions({ packageRootStartDir: packageDir })).resolves.toMatchObject({
+      command: "bun",
+      args: ["x", "@ifbars/agent-pets", "--provider", "opencode"],
+      cwd: os.homedir(),
+    });
   });
 });

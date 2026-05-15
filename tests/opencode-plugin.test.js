@@ -87,4 +87,29 @@ describe("opencode agent pets plugin", () => {
     const snapshot = JSON.parse(await fs.readFile(statusFile, "utf8"));
     expect(snapshot.sessions[0].title).toBe("Options trading basics");
   });
+
+  test("maps completion-shaped message part updates to review", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "agent-pets-plugin-complete-"));
+    const statusFile = path.join(dir, "opencode.json");
+    const plugin = await AgentPetsOpenCodePlugin({}, { statusFile });
+
+    await plugin.event({
+      event: {
+        type: "message.part.updated",
+        properties: {
+          sessionID: "oc-complete",
+          title: "Done session",
+          part: { type: "step-finish", reason: "stop" },
+        },
+      },
+    });
+
+    const snapshot = JSON.parse(await fs.readFile(statusFile, "utf8"));
+    expect(snapshot.sessions[0]).toMatchObject({
+      id: "oc-complete",
+      title: "Done session",
+      state: "review",
+      detail: "finished: stop",
+    });
+  });
 });
