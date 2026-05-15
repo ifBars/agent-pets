@@ -15,7 +15,7 @@
     },
     "packages/opencode-agent-pets": {
       "name": "opencode-agent-pets",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "peerDependencies": {
         "@opencode-ai/plugin": ">=1.4.0",
       },
