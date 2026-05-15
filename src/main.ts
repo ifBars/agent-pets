@@ -2,9 +2,12 @@ import { app, BrowserWindow, ipcMain, Menu, Tray, type IpcMainInvokeEvent } from
 import * as path from "node:path";
 import { readActivity } from "./main/activity";
 import { readPets } from "./main/pet-store";
+import { listProviders } from "./main/providers";
 import { readSettings, updateSettings } from "./main/settings";
 import { validatePetPackage } from "./main/validate-pet";
 import type { ProviderId, WindowBounds } from "./main/types";
+
+let appTray: Tray | null = null;
 
 export interface StartupArgs {
   pet: string | null;
@@ -138,14 +141,14 @@ function wireWindowPersistence(win: BrowserWindow, settingsPath: string): void {
 }
 
 function wireTray(win: BrowserWindow): void {
-  let tray: Tray;
+  destroyTray();
   try {
-    tray = new Tray(path.join(__dirname, "assets", "tray.png"));
+    appTray = new Tray(path.join(__dirname, "assets", "tray.png"));
   } catch {
     return;
   }
-  tray.setToolTip("Agent Pets");
-  tray.setContextMenu(
+  appTray.setToolTip("Agent Pets");
+  appTray.setContextMenu(
     Menu.buildFromTemplate([
       { label: "Show Agent Pets", click: () => win.show() },
       { label: "Hide", click: () => win.hide() },
@@ -153,10 +156,19 @@ function wireTray(win: BrowserWindow): void {
       { label: "Quit", click: () => app.quit() },
     ]),
   );
+  win.once("closed", destroyTray);
+  app.once("before-quit", destroyTray);
+}
+
+export function destroyTray(): void {
+  if (!appTray) return;
+  appTray.destroy();
+  appTray = null;
 }
 
 export function registerIpcHandlers(): void {
   ipcMain.handle("pets:list", async (_event: IpcMainInvokeEvent, codexHome: string) => readPets(codexHome));
+  ipcMain.handle("providers:list", async () => listProviders());
   ipcMain.handle("activity:read", async (_event: IpcMainInvokeEvent, options) => readActivity(options));
   ipcMain.handle("settings:get", async () => readSettings(path.join(app.getPath("userData"), "settings.json")));
   ipcMain.handle("settings:update", async (_event: IpcMainInvokeEvent, patch) => updateSettings(path.join(app.getPath("userData"), "settings.json"), patch));

@@ -52,6 +52,8 @@ let pendingDragDeltaY = 0;
 let lastDragMoveAt = 0;
 let refreshTimer = null;
 let lastActivityState = "idle";
+let providers = [];
+let providerById = new Map();
 
 const petElement = document.getElementById("pet");
 const petStage = document.querySelector(".pet-stage");
@@ -249,14 +251,7 @@ function isBadgeSession(session) {
 }
 
 function labelForSource(source) {
-  return {
-    codex: "Codex",
-    opencode: "OpenCode",
-    "claude-code": "Claude Code",
-    t3code: "T3Code",
-    "json-status": "Status file",
-    desktop: "Desktop",
-  }[source] || "Agent";
+  return providerById.get(source)?.label || "Agent";
 }
 
 function labelForState(state) {
@@ -281,6 +276,9 @@ function relativeTime(value) {
 }
 
 async function boot() {
+  providers = await loadProviders();
+  providerById = new Map(providers.map((item) => [item.id, item]));
+  renderProviderOptions();
   const settings = await window.codexPets.getSettings().catch(() => ({
     selectedPetId: "",
     selectedState: "auto",
@@ -290,6 +288,7 @@ async function boot() {
   }));
   statusFile = statusFile || settings.statusFile || "";
   provider = provider || settings.provider || "codex";
+  if (!providerById.has(provider)) provider = "codex";
   petSize = petSize || settings.petSize || 112;
   requestedState = initialState || settings.selectedState || "auto";
   pets = await window.codexPets.listPets(codexHome);
@@ -311,10 +310,33 @@ async function boot() {
   await refreshActivity();
 }
 
+async function loadProviders() {
+  const fallback = [
+    { id: "codex", label: "Codex", modes: ["jsonl"], defaultRefreshMs: IDLE_REFRESH_MS },
+    { id: "opencode", label: "OpenCode", modes: ["bridge-file", "command"], defaultRefreshMs: IDLE_REFRESH_MS },
+    { id: "claude-code", label: "Claude Code", modes: ["jsonl"], defaultRefreshMs: IDLE_REFRESH_MS },
+    { id: "t3code", label: "T3Code", modes: ["command", "jsonl"], defaultRefreshMs: IDLE_REFRESH_MS },
+    { id: "json-status", label: "Status file", modes: ["bridge-file"], requiresStatusFile: true, defaultRefreshMs: IDLE_REFRESH_MS },
+    { id: "desktop", label: "Desktop", modes: ["manual"], defaultRefreshMs: DESKTOP_REFRESH_MS },
+  ];
+  if (!window.codexPets?.listProviders) return fallback;
+  const listed = await window.codexPets.listProviders().catch(() => fallback);
+  return Array.isArray(listed) && listed.length ? listed : fallback;
+}
+
+function renderProviderOptions() {
+  providerSelect.textContent = "";
+  for (const item of providers) {
+    const option = document.createElement("option");
+    option.value = item.id;
+    option.textContent = item.label;
+    providerSelect.append(option);
+  }
+}
+
 function refreshDelayForState() {
-  if (provider === "desktop") return DESKTOP_REFRESH_MS;
   if (lastActivityState === "running" || lastActivityState === "waiting") return ACTIVE_REFRESH_MS;
-  return IDLE_REFRESH_MS;
+  return providerById.get(provider)?.defaultRefreshMs || IDLE_REFRESH_MS;
 }
 
 function scheduleNextRefresh() {
@@ -548,7 +570,7 @@ function clamp(value, min, max) {
 }
 
 function updateProviderControls() {
-  statusFileRow.hidden = provider !== "json-status";
+  statusFileRow.hidden = !providerById.get(provider)?.requiresStatusFile;
 }
 
 petSelect.addEventListener("change", () => selectPet(petSelect.value));

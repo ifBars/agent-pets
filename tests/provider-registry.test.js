@@ -3,13 +3,17 @@ const { listProviders, normalizeProvider } = require("../build/src/main/provider
 
 describe("provider registry", () => {
   test("lists built-in providers", () => {
-    const ids = listProviders().map((provider) => provider.id);
+    const providers = listProviders();
+    const ids = providers.map((provider) => provider.id);
     expect(ids).toContain("codex");
     expect(ids).toContain("opencode");
     expect(ids).toContain("claude-code");
     expect(ids).toContain("t3code");
     expect(ids).toContain("json-status");
     expect(ids).toContain("desktop");
+    expect(providers.find((provider) => provider.id === "json-status").requiresStatusFile).toBe(true);
+    expect(providers.find((provider) => provider.id === "desktop").defaultRefreshMs).toBe(30000);
+    expect(providers.find((provider) => provider.id === "opencode").modes).toContain("bridge-file");
   });
 
   test("normalizes unknown providers to codex", () => {

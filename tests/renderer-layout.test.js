@@ -89,6 +89,16 @@ describe("renderer layout", () => {
     expect(renderer).not.toContain("document.elementsFromPoint");
   });
 
+  test("tray icon is destroyed on quit to avoid stale Windows notification icons", () => {
+    const main = fs.readFileSync(path.join(__dirname, "..", "src", "main.ts"), "utf8");
+
+    expect(main).toContain("let appTray: Tray | null = null");
+    expect(main).toContain("destroyTray();");
+    expect(main).toContain('app.once("before-quit", destroyTray)');
+    expect(main).toContain('win.once("closed", destroyTray)');
+    expect(main).toContain("appTray.destroy()");
+  });
+
   test("renderer avoids high-frequency polling and drag IPC", () => {
     const renderer = fs.readFileSync(path.join(__dirname, "..", "src", "renderer.js"), "utf8");
 
@@ -99,5 +109,19 @@ describe("renderer layout", () => {
     expect(renderer).toContain("scheduleNextRefresh");
     expect(renderer).toContain("flushPetDrag(false)");
     expect(renderer).not.toContain("window.setInterval(() => refreshActivity");
+  });
+
+  test("provider select is populated from registry metadata", () => {
+    const html = fs.readFileSync(path.join(__dirname, "..", "src", "renderer.html"), "utf8");
+    const main = fs.readFileSync(path.join(__dirname, "..", "src", "main.ts"), "utf8");
+    const preload = fs.readFileSync(path.join(__dirname, "..", "src", "preload.ts"), "utf8");
+    const renderer = fs.readFileSync(path.join(__dirname, "..", "src", "renderer.js"), "utf8");
+
+    expect(html).toContain('<select id="providerSelect" aria-label="Provider"></select>');
+    expect(html).not.toContain('<option value="opencode">OpenCode</option>');
+    expect(main).toContain('ipcMain.handle("providers:list"');
+    expect(preload).toContain("listProviders");
+    expect(renderer).toContain("renderProviderOptions");
+    expect(renderer).toContain("requiresStatusFile");
   });
 });

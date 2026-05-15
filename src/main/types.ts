@@ -1,6 +1,7 @@
 import type { Stats } from "node:fs";
 
 export type ProviderId = "codex" | "opencode" | "claude-code" | "t3code" | "json-status" | "desktop";
+export type ProviderIntegrationMode = "bridge-file" | "command" | "jsonl" | "http" | "manual";
 export type ActivityState = "idle" | "running" | "waiting" | "failed" | "review";
 export type PetAnimationState =
   | "auto"
@@ -60,9 +61,16 @@ export interface ProviderReadOptions {
   roots?: string[];
 }
 
-export interface ProviderDefinition {
+export interface ProviderMetadata {
   id: ProviderId;
   label: string;
+  modes: ProviderIntegrationMode[];
+  requiresStatusFile?: boolean;
+  defaultRefreshMs?: number;
+  setupHint?: string;
+}
+
+export interface ProviderDefinition extends ProviderMetadata {
   read: (options: ProviderReadOptions) => Promise<ActivityPayload> | ActivityPayload;
 }
 

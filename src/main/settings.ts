@@ -1,5 +1,6 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { normalizeProvider } from "./providers/registry";
 import type { PetAnimationState, ProviderId, Settings, WindowBounds } from "./types";
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -45,11 +46,6 @@ export function normalizeSettings(value: unknown): Settings {
     statusFile: cleanString(input.statusFile),
     windowBounds: normalizeBounds(input.windowBounds),
   };
-}
-
-export function normalizeProvider(value: unknown): ProviderId {
-  const valid = new Set(["codex", "opencode", "claude-code", "t3code", "json-status", "desktop"]);
-  return valid.has(value as string) ? (value as ProviderId) : "codex";
 }
 
 export function normalizePetSize(value: unknown): number {

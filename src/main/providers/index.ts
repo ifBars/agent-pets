@@ -3,16 +3,21 @@ import { readCodexActivity } from "./codex";
 import { readDesktopActivity } from "./desktop";
 import { readJsonStatusActivity } from "./json-status";
 import { readOpenCodeActivity } from "./opencode";
+import { listProviderMetadata, normalizeProvider } from "./registry";
 import { readT3CodeActivity } from "./t3code";
 import type { ActivityPayload, ProviderDefinition, ProviderId, ProviderReadOptions } from "../types";
 
+const PROVIDER_READERS: Record<ProviderId, ProviderDefinition["read"]> = {
+  codex: (options) => readCodexActivity(options.codexHome || "", options),
+  opencode: readOpenCodeActivity,
+  "claude-code": readClaudeCodeActivity,
+  t3code: readT3CodeActivity,
+  "json-status": (options) => readJsonStatusActivity(options.statusFile, options),
+  desktop: readDesktopActivity,
+};
+
 export const PROVIDERS: ProviderDefinition[] = [
-  { id: "codex", label: "Codex", read: (options) => readCodexActivity(options.codexHome || "", options) },
-  { id: "opencode", label: "OpenCode", read: readOpenCodeActivity },
-  { id: "claude-code", label: "Claude Code", read: readClaudeCodeActivity },
-  { id: "t3code", label: "T3Code", read: readT3CodeActivity },
-  { id: "json-status", label: "Status file", read: (options) => readJsonStatusActivity(options.statusFile, options) },
-  { id: "desktop", label: "Desktop", read: readDesktopActivity },
+  ...listProviderMetadata().map((provider) => ({ ...provider, read: PROVIDER_READERS[provider.id] })),
 ];
 
 const PROVIDER_BY_ID = new Map<ProviderId, ProviderDefinition>(PROVIDERS.map((provider) => [provider.id, provider]));
@@ -23,10 +28,8 @@ export async function readProviderActivity(options: ProviderReadOptions = {}): P
   return provider.read(options);
 }
 
-export function listProviders(): Array<Pick<ProviderDefinition, "id" | "label">> {
-  return PROVIDERS.map(({ id, label }) => ({ id, label }));
+export function listProviders(): ReturnType<typeof listProviderMetadata> {
+  return listProviderMetadata();
 }
 
-export function normalizeProvider(value: unknown): ProviderId {
-  return PROVIDER_BY_ID.has(value as ProviderId) ? (value as ProviderId) : "codex";
-}
+export { normalizeProvider };
