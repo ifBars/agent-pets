@@ -1,6 +1,15 @@
 import type { Stats } from "node:fs";
 
-export type ProviderId = "codex" | "opencode" | "claude-code" | "t3code" | "json-status" | "desktop";
+export type ProviderId =
+  | "codex"
+  | "opencode"
+  | "claude-code"
+  | "gemini-cli"
+  | "aider"
+  | "copilot-cli"
+  | "t3code"
+  | "json-status"
+  | "desktop";
 export type ProviderIntegrationMode = "bridge-file" | "command" | "jsonl" | "http" | "manual";
 export type ActivityState = "idle" | "running" | "waiting" | "failed" | "review";
 export type PetAnimationState =
@@ -56,6 +65,7 @@ export interface ProviderReadOptions {
   runner?: (options?: ProviderReadOptions) => Promise<unknown>;
   bridgeFile?: string;
   claudeHome?: string;
+  geminiHome?: string;
   projectsRoot?: string;
   commands?: string[];
   roots?: string[];

@@ -1,11 +1,17 @@
 import * as path from "node:path";
 import { mapActivityToPetState } from "./codex";
 import { aggregateActivity, cleanString, findRecentFiles, normalizeState, readJsonlTail } from "./shared";
+import { readJsonStatusActivity } from "./json-status";
 import type { ActivityPayload, ActivitySession, FileWithStat, ProviderReadOptions } from "../types";
 
 export async function readClaudeCodeActivity(options: ProviderReadOptions = {}): Promise<ActivityPayload> {
   const now = options.now || new Date();
   const claudeHome = options.claudeHome || path.join(process.env.USERPROFILE || process.env.HOME || "", ".claude");
+  const statusFile = cleanString(options.bridgeFile) || cleanString(process.env.AGENT_PETS_CLAUDE_STATUS_FILE) || defaultClaudeStatusFile();
+  const bridge = await readJsonStatusActivity(statusFile, options);
+  if (!bridge.error && bridge.active) {
+    return { ...bridge, source: "claude-code", statusFile, claudeHome };
+  }
   const projectsRoot = options.projectsRoot || path.join(claudeHome, "projects");
   try {
     const files = await findRecentFiles(projectsRoot, (_fullPath, name) => name.endsWith(".jsonl"), 8);
@@ -14,10 +20,23 @@ export async function readClaudeCodeActivity(options: ProviderReadOptions = {}):
       const records = await readJsonlTail(file.filePath);
       sessions.push(normalizeClaudeSession(file, records, now));
     }
-    return aggregateActivity("claude-code", sessions, now, { claudeHome });
+    return aggregateActivity("claude-code", sessions, now, {
+      claudeHome,
+      statusFile,
+      error: bridge.error === "Status file not found" ? undefined : bridge.error,
+    });
   } catch (error) {
-    return aggregateActivity("claude-code", [], now, { claudeHome, error: error instanceof Error ? error.message : String(error) });
+    return aggregateActivity("claude-code", [], now, { claudeHome, statusFile, error: error instanceof Error ? error.message : String(error) });
   }
+}
+
+export function defaultClaudeStatusFile(): string {
+  if (process.platform === "win32") {
+    const localAppData = process.env.LOCALAPPDATA || path.join(process.env.USERPROFILE || process.env.HOME || "", "AppData", "Local");
+    return path.join(localAppData, "Agent Pets", "providers", "claude-code.json");
+  }
+  const stateHome = process.env.XDG_STATE_HOME || path.join(process.env.HOME || "", ".local", "state");
+  return path.join(stateHome, "agent-pets", "providers", "claude-code.json");
 }
 
 export function normalizeClaudeSession(file: FileWithStat, records: any[], now: Date): ActivitySession {

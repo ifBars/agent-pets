@@ -1,6 +1,9 @@
+import { readAiderActivity } from "./aider";
 import { readClaudeCodeActivity } from "./claude-code";
 import { readCodexActivity } from "./codex";
+import { readCopilotCliActivity } from "./copilot-cli";
 import { readDesktopActivity } from "./desktop";
+import { readGeminiCliActivity } from "./gemini-cli";
 import { readJsonStatusActivity } from "./json-status";
 import { readOpenCodeActivity } from "./opencode";
 import { listProviderMetadata, normalizeProvider } from "./registry";
@@ -11,6 +14,9 @@ const PROVIDER_READERS: Record<ProviderId, ProviderDefinition["read"]> = {
   codex: (options) => readCodexActivity(options.codexHome || "", options),
   opencode: readOpenCodeActivity,
   "claude-code": readClaudeCodeActivity,
+  "gemini-cli": readGeminiCliActivity,
+  aider: readAiderActivity,
+  "copilot-cli": readCopilotCliActivity,
   t3code: readT3CodeActivity,
   "json-status": (options) => readJsonStatusActivity(options.statusFile, options),
   desktop: readDesktopActivity,

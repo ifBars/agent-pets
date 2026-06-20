@@ -1,0 +1,19 @@
+# Invoked in Gemini CLI as /pet
+description = "Launch Agent Pets in Gemini CLI mode."
+prompt = """
+Launch Agent Pets as a detached local desktop companion for Gemini CLI.
+
+Use the shell tool exactly once with the platform-appropriate detached command:
+
+- Windows PowerShell:
+  Start-Process -WindowStyle Hidden -FilePath bun -ArgumentList 'x','@ifbars/agent-pets','--provider','gemini-cli'
+- macOS/Linux:
+  sh -c 'nohup bunx @ifbars/agent-pets --provider gemini-cli >/dev/null 2>&1 &'
+
+If the user provided a pet id in the command arguments, append `--pet <pet-id>` to the Agent Pets command.
+
+After launching, respond with one concise sentence. Do not read, summarize, or print prompt or response history.
+
+Command arguments:
+{{args}}
+"""

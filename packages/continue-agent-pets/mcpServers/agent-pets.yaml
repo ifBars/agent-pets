@@ -1,0 +1,10 @@
+name: Agent Pets MCP
+version: 0.0.1
+schema: v1
+mcpServers:
+  - name: Agent Pets
+    type: stdio
+    command: "bunx"
+    args:
+      - "@ifbars/agent-pets"
+      - "--mcp"

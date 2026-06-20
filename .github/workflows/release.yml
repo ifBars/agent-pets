@@ -8,6 +8,17 @@ on:
     paths:
       - package.json
       - packages/opencode-agent-pets/package.json
+      - packages/claude-code-agent-pets/package.json
+      - packages/gemini-agent-pets/package.json
+      - packages/cursor-agent-pets/package.json
+      - packages/aider-agent-pets/package.json
+      - packages/goose-agent-pets/package.json
+      - packages/copilot-agent-pets/package.json
+      - packages/windsurf-agent-pets/package.json
+      - packages/cline-agent-pets/package.json
+      - packages/continue-agent-pets/package.json
+      - packages/zed-agent-pets/package.json
+      - packages/warp-agent-pets/package.json
     tags:
       - "v*"
   release:
@@ -49,6 +60,17 @@ jobs:
           release_exists=false
           agent_pets_published=false
           opencode_agent_pets_published=false
+          claude_code_agent_pets_published=false
+          gemini_agent_pets_published=false
+          cursor_agent_pets_published=false
+          aider_agent_pets_published=false
+          goose_agent_pets_published=false
+          copilot_agent_pets_published=false
+          windsurf_agent_pets_published=false
+          cline_agent_pets_published=false
+          continue_agent_pets_published=false
+          zed_agent_pets_published=false
+          warp_agent_pets_published=false
           version=""
           tag=""
 
@@ -67,6 +89,17 @@ jobs:
           else
             version="$(node -p "require('./package.json').version")"
             opencode_version="$(node -p "require('./packages/opencode-agent-pets/package.json').version")"
+            claude_code_version="$(node -p "require('./packages/claude-code-agent-pets/package.json').version")"
+            gemini_version="$(node -p "require('./packages/gemini-agent-pets/package.json').version")"
+            cursor_version="$(node -p "require('./packages/cursor-agent-pets/package.json').version")"
+            aider_version="$(node -p "require('./packages/aider-agent-pets/package.json').version")"
+            goose_version="$(node -p "require('./packages/goose-agent-pets/package.json').version")"
+            copilot_version="$(node -p "require('./packages/copilot-agent-pets/package.json').version")"
+            windsurf_version="$(node -p "require('./packages/windsurf-agent-pets/package.json').version")"
+            cline_version="$(node -p "require('./packages/cline-agent-pets/package.json').version")"
+            continue_version="$(node -p "require('./packages/continue-agent-pets/package.json').version")"
+            zed_version="$(node -p "require('./packages/zed-agent-pets/package.json').version")"
+            warp_version="$(node -p "require('./packages/warp-agent-pets/package.json').version")"
 
             if git show HEAD^:package.json > /tmp/previous-package.json 2>/dev/null; then
               previous_version="$(node -p "require('/tmp/previous-package.json').version")"
@@ -80,15 +113,136 @@ jobs:
               previous_opencode_version=""
             fi
 
-            if [ "${version}" != "${previous_version}" ] || [ "${opencode_version}" != "${previous_opencode_version}" ]; then
+            if git show HEAD^:packages/claude-code-agent-pets/package.json > /tmp/previous-claude-code-package.json 2>/dev/null; then
+              previous_claude_code_version="$(node -p "require('/tmp/previous-claude-code-package.json').version")"
+            else
+              previous_claude_code_version=""
+            fi
+
+            if git show HEAD^:packages/gemini-agent-pets/package.json > /tmp/previous-gemini-package.json 2>/dev/null; then
+              previous_gemini_version="$(node -p "require('/tmp/previous-gemini-package.json').version")"
+            else
+              previous_gemini_version=""
+            fi
+
+            if git show HEAD^:packages/cursor-agent-pets/package.json > /tmp/previous-cursor-package.json 2>/dev/null; then
+              previous_cursor_version="$(node -p "require('/tmp/previous-cursor-package.json').version")"
+            else
+              previous_cursor_version=""
+            fi
+
+            if git show HEAD^:packages/aider-agent-pets/package.json > /tmp/previous-aider-package.json 2>/dev/null; then
+              previous_aider_version="$(node -p "require('/tmp/previous-aider-package.json').version")"
+            else
+              previous_aider_version=""
+            fi
+
+            if git show HEAD^:packages/goose-agent-pets/package.json > /tmp/previous-goose-package.json 2>/dev/null; then
+              previous_goose_version="$(node -p "require('/tmp/previous-goose-package.json').version")"
+            else
+              previous_goose_version=""
+            fi
+
+            if git show HEAD^:packages/copilot-agent-pets/package.json > /tmp/previous-copilot-package.json 2>/dev/null; then
+              previous_copilot_version="$(node -p "require('/tmp/previous-copilot-package.json').version")"
+            else
+              previous_copilot_version=""
+            fi
+
+            if git show HEAD^:packages/windsurf-agent-pets/package.json > /tmp/previous-windsurf-package.json 2>/dev/null; then
+              previous_windsurf_version="$(node -p "require('/tmp/previous-windsurf-package.json').version")"
+            else
+              previous_windsurf_version=""
+            fi
+
+            if git show HEAD^:packages/cline-agent-pets/package.json > /tmp/previous-cline-package.json 2>/dev/null; then
+              previous_cline_version="$(node -p "require('/tmp/previous-cline-package.json').version")"
+            else
+              previous_cline_version=""
+            fi
+
+            if git show HEAD^:packages/continue-agent-pets/package.json > /tmp/previous-continue-package.json 2>/dev/null; then
+              previous_continue_version="$(node -p "require('/tmp/previous-continue-package.json').version")"
+            else
+              previous_continue_version=""
+            fi
+
+            if git show HEAD^:packages/zed-agent-pets/package.json > /tmp/previous-zed-package.json 2>/dev/null; then
+              previous_zed_version="$(node -p "require('/tmp/previous-zed-package.json').version")"
+            else
+              previous_zed_version=""
+            fi
+
+            if git show HEAD^:packages/warp-agent-pets/package.json > /tmp/previous-warp-package.json 2>/dev/null; then
+              previous_warp_version="$(node -p "require('/tmp/previous-warp-package.json').version")"
+            else
+              previous_warp_version=""
+            fi
+
+            if [ "${version}" != "${previous_version}" ] || [ "${opencode_version}" != "${previous_opencode_version}" ] || [ "${claude_code_version}" != "${previous_claude_code_version}" ] || [ "${gemini_version}" != "${previous_gemini_version}" ] || [ "${cursor_version}" != "${previous_cursor_version}" ] || [ "${aider_version}" != "${previous_aider_version}" ] || [ "${goose_version}" != "${previous_goose_version}" ] || [ "${copilot_version}" != "${previous_copilot_version}" ] || [ "${windsurf_version}" != "${previous_windsurf_version}" ] || [ "${cline_version}" != "${previous_cline_version}" ] || [ "${continue_version}" != "${previous_continue_version}" ] || [ "${zed_version}" != "${previous_zed_version}" ] || [ "${warp_version}" != "${previous_warp_version}" ]; then
               tag="v${version}"
               should_release=true
             fi
           fi
 
           opencode_version="$(node -p "require('./packages/opencode-agent-pets/package.json').version")"
+          claude_code_version="$(node -p "require('./packages/claude-code-agent-pets/package.json').version")"
+          gemini_version="$(node -p "require('./packages/gemini-agent-pets/package.json').version")"
+          cursor_version="$(node -p "require('./packages/cursor-agent-pets/package.json').version")"
+          aider_version="$(node -p "require('./packages/aider-agent-pets/package.json').version")"
+          goose_version="$(node -p "require('./packages/goose-agent-pets/package.json').version")"
+          copilot_version="$(node -p "require('./packages/copilot-agent-pets/package.json').version")"
+          windsurf_version="$(node -p "require('./packages/windsurf-agent-pets/package.json').version")"
+          cline_version="$(node -p "require('./packages/cline-agent-pets/package.json').version")"
+          continue_version="$(node -p "require('./packages/continue-agent-pets/package.json').version")"
+          zed_version="$(node -p "require('./packages/zed-agent-pets/package.json').version")"
+          warp_version="$(node -p "require('./packages/warp-agent-pets/package.json').version")"
           if [ -n "${version}" ] && [ "${opencode_version}" != "${version}" ]; then
             echo "Version mismatch: package.json is ${version}, packages/opencode-agent-pets/package.json is ${opencode_version}."
+            exit 1
+          fi
+          if [ -n "${version}" ] && [ "${claude_code_version}" != "${version}" ]; then
+            echo "Version mismatch: package.json is ${version}, packages/claude-code-agent-pets/package.json is ${claude_code_version}."
+            exit 1
+          fi
+          if [ -n "${version}" ] && [ "${gemini_version}" != "${version}" ]; then
+            echo "Version mismatch: package.json is ${version}, packages/gemini-agent-pets/package.json is ${gemini_version}."
+            exit 1
+          fi
+          if [ -n "${version}" ] && [ "${cursor_version}" != "${version}" ]; then
+            echo "Version mismatch: package.json is ${version}, packages/cursor-agent-pets/package.json is ${cursor_version}."
+            exit 1
+          fi
+          if [ -n "${version}" ] && [ "${aider_version}" != "${version}" ]; then
+            echo "Version mismatch: package.json is ${version}, packages/aider-agent-pets/package.json is ${aider_version}."
+            exit 1
+          fi
+          if [ -n "${version}" ] && [ "${goose_version}" != "${version}" ]; then
+            echo "Version mismatch: package.json is ${version}, packages/goose-agent-pets/package.json is ${goose_version}."
+            exit 1
+          fi
+          if [ -n "${version}" ] && [ "${copilot_version}" != "${version}" ]; then
+            echo "Version mismatch: package.json is ${version}, packages/copilot-agent-pets/package.json is ${copilot_version}."
+            exit 1
+          fi
+          if [ -n "${version}" ] && [ "${windsurf_version}" != "${version}" ]; then
+            echo "Version mismatch: package.json is ${version}, packages/windsurf-agent-pets/package.json is ${windsurf_version}."
+            exit 1
+          fi
+          if [ -n "${version}" ] && [ "${cline_version}" != "${version}" ]; then
+            echo "Version mismatch: package.json is ${version}, packages/cline-agent-pets/package.json is ${cline_version}."
+            exit 1
+          fi
+          if [ -n "${version}" ] && [ "${continue_version}" != "${version}" ]; then
+            echo "Version mismatch: package.json is ${version}, packages/continue-agent-pets/package.json is ${continue_version}."
+            exit 1
+          fi
+          if [ -n "${version}" ] && [ "${zed_version}" != "${version}" ]; then
+            echo "Version mismatch: package.json is ${version}, packages/zed-agent-pets/package.json is ${zed_version}."
+            exit 1
+          fi
+          if [ -n "${version}" ] && [ "${warp_version}" != "${version}" ]; then
+            echo "Version mismatch: package.json is ${version}, packages/warp-agent-pets/package.json is ${warp_version}."
             exit 1
           fi
 
@@ -108,7 +262,62 @@ jobs:
               opencode_agent_pets_published=true
             fi
 
-            if [ "${release_exists}" = "true" ] && [ "${agent_pets_published}" = "true" ] && [ "${opencode_agent_pets_published}" = "true" ]; then
+            if bun pm view "claude-code-agent-pets@${version}" version >/dev/null 2>&1; then
+              echo "claude-code-agent-pets@${version} is already published; skipping."
+              claude_code_agent_pets_published=true
+            fi
+
+            if bun pm view "gemini-agent-pets@${version}" version >/dev/null 2>&1; then
+              echo "gemini-agent-pets@${version} is already published; skipping."
+              gemini_agent_pets_published=true
+            fi
+
+            if bun pm view "cursor-agent-pets@${version}" version >/dev/null 2>&1; then
+              echo "cursor-agent-pets@${version} is already published; skipping."
+              cursor_agent_pets_published=true
+            fi
+
+            if bun pm view "aider-agent-pets@${version}" version >/dev/null 2>&1; then
+              echo "aider-agent-pets@${version} is already published; skipping."
+              aider_agent_pets_published=true
+            fi
+
+            if bun pm view "goose-agent-pets@${version}" version >/dev/null 2>&1; then
+              echo "goose-agent-pets@${version} is already published; skipping."
+              goose_agent_pets_published=true
+            fi
+
+            if bun pm view "copilot-agent-pets@${version}" version >/dev/null 2>&1; then
+              echo "copilot-agent-pets@${version} is already published; skipping."
+              copilot_agent_pets_published=true
+            fi
+
+            if bun pm view "windsurf-agent-pets@${version}" version >/dev/null 2>&1; then
+              echo "windsurf-agent-pets@${version} is already published; skipping."
+              windsurf_agent_pets_published=true
+            fi
+
+            if bun pm view "cline-agent-pets@${version}" version >/dev/null 2>&1; then
+              echo "cline-agent-pets@${version} is already published; skipping."
+              cline_agent_pets_published=true
+            fi
+
+            if bun pm view "continue-agent-pets@${version}" version >/dev/null 2>&1; then
+              echo "continue-agent-pets@${version} is already published; skipping."
+              continue_agent_pets_published=true
+            fi
+
+            if bun pm view "zed-agent-pets@${version}" version >/dev/null 2>&1; then
+              echo "zed-agent-pets@${version} is already published; skipping."
+              zed_agent_pets_published=true
+            fi
+
+            if bun pm view "warp-agent-pets@${version}" version >/dev/null 2>&1; then
+              echo "warp-agent-pets@${version} is already published; skipping."
+              warp_agent_pets_published=true
+            fi
+
+            if [ "${release_exists}" = "true" ] && [ "${agent_pets_published}" = "true" ] && [ "${opencode_agent_pets_published}" = "true" ] && [ "${claude_code_agent_pets_published}" = "true" ] && [ "${gemini_agent_pets_published}" = "true" ] && [ "${cursor_agent_pets_published}" = "true" ] && [ "${aider_agent_pets_published}" = "true" ] && [ "${goose_agent_pets_published}" = "true" ] && [ "${copilot_agent_pets_published}" = "true" ] && [ "${windsurf_agent_pets_published}" = "true" ] && [ "${cline_agent_pets_published}" = "true" ] && [ "${continue_agent_pets_published}" = "true" ] && [ "${zed_agent_pets_published}" = "true" ] && [ "${warp_agent_pets_published}" = "true" ]; then
               should_release=false
             fi
           fi
@@ -270,6 +479,171 @@ jobs:
             bun publish --access public
           fi
 
+      - name: Publish Claude Code package
+        if: always()
+        working-directory: packages/claude-code-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "claude-code-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "claude-code-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Gemini CLI package
+        if: always()
+        working-directory: packages/gemini-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "gemini-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "gemini-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Cursor MCP package
+        if: always()
+        working-directory: packages/cursor-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "cursor-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "cursor-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Aider package
+        if: always()
+        working-directory: packages/aider-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "aider-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "aider-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Goose package
+        if: always()
+        working-directory: packages/goose-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "goose-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "goose-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish GitHub Copilot CLI package
+        if: always()
+        working-directory: packages/copilot-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "copilot-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "copilot-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Windsurf package
+        if: always()
+        working-directory: packages/windsurf-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "windsurf-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "windsurf-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Cline package
+        if: always()
+        working-directory: packages/cline-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "cline-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "cline-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Continue package
+        if: always()
+        working-directory: packages/continue-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "continue-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "continue-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Zed package
+        if: always()
+        working-directory: packages/zed-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "zed-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "zed-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Warp package
+        if: always()
+        working-directory: packages/warp-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "warp-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "warp-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
   npm-publish-version-bump:
     name: Publish npm packages from generated release
     if: always() && needs.prepare.outputs.should_release == 'true' && needs.build.result == 'success' && github.event_name != 'release' && (needs.prepare.outputs.release_exists == 'true' || needs.github-release.result == 'success')
@@ -331,6 +705,182 @@ jobs:
             bun publish --access public
           fi
 
+      - name: Publish Claude Code package
+        id: publish_claude_code_agent_pets
+        continue-on-error: true
+        working-directory: packages/claude-code-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "claude-code-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "claude-code-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Gemini CLI package
+        id: publish_gemini_agent_pets
+        continue-on-error: true
+        working-directory: packages/gemini-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "gemini-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "gemini-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Cursor MCP package
+        id: publish_cursor_agent_pets
+        continue-on-error: true
+        working-directory: packages/cursor-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "cursor-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "cursor-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Aider package
+        id: publish_aider_agent_pets
+        continue-on-error: true
+        working-directory: packages/aider-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "aider-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "aider-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Goose package
+        id: publish_goose_agent_pets
+        continue-on-error: true
+        working-directory: packages/goose-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "goose-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "goose-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish GitHub Copilot CLI package
+        id: publish_copilot_agent_pets
+        continue-on-error: true
+        working-directory: packages/copilot-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "copilot-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "copilot-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Windsurf package
+        id: publish_windsurf_agent_pets
+        continue-on-error: true
+        working-directory: packages/windsurf-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "windsurf-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "windsurf-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Cline package
+        id: publish_cline_agent_pets
+        continue-on-error: true
+        working-directory: packages/cline-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "cline-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "cline-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Continue package
+        id: publish_continue_agent_pets
+        continue-on-error: true
+        working-directory: packages/continue-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "continue-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "continue-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Zed package
+        id: publish_zed_agent_pets
+        continue-on-error: true
+        working-directory: packages/zed-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "zed-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "zed-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
+      - name: Publish Warp package
+        id: publish_warp_agent_pets
+        continue-on-error: true
+        working-directory: packages/warp-agent-pets
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if bun pm view "warp-agent-pets@${version}" version >/dev/null 2>&1; then
+            echo "warp-agent-pets@${version} is already published; skipping."
+          else
+            bun publish --access public
+          fi
+
       - name: Check npm publish results
         run: |
           set -euo pipefail
@@ -343,6 +893,61 @@ jobs:
 
           if [ "${{ steps.publish_opencode_agent_pets.outcome }}" != "success" ]; then
             echo "opencode-agent-pets publish failed."
+            failed=true
+          fi
+
+          if [ "${{ steps.publish_claude_code_agent_pets.outcome }}" != "success" ]; then
+            echo "claude-code-agent-pets publish failed."
+            failed=true
+          fi
+
+          if [ "${{ steps.publish_gemini_agent_pets.outcome }}" != "success" ]; then
+            echo "gemini-agent-pets publish failed."
+            failed=true
+          fi
+
+          if [ "${{ steps.publish_cursor_agent_pets.outcome }}" != "success" ]; then
+            echo "cursor-agent-pets publish failed."
+            failed=true
+          fi
+
+          if [ "${{ steps.publish_aider_agent_pets.outcome }}" != "success" ]; then
+            echo "aider-agent-pets publish failed."
+            failed=true
+          fi
+
+          if [ "${{ steps.publish_goose_agent_pets.outcome }}" != "success" ]; then
+            echo "goose-agent-pets publish failed."
+            failed=true
+          fi
+
+          if [ "${{ steps.publish_copilot_agent_pets.outcome }}" != "success" ]; then
+            echo "copilot-agent-pets publish failed."
+            failed=true
+          fi
+
+          if [ "${{ steps.publish_windsurf_agent_pets.outcome }}" != "success" ]; then
+            echo "windsurf-agent-pets publish failed."
+            failed=true
+          fi
+
+          if [ "${{ steps.publish_cline_agent_pets.outcome }}" != "success" ]; then
+            echo "cline-agent-pets publish failed."
+            failed=true
+          fi
+
+          if [ "${{ steps.publish_continue_agent_pets.outcome }}" != "success" ]; then
+            echo "continue-agent-pets publish failed."
+            failed=true
+          fi
+
+          if [ "${{ steps.publish_zed_agent_pets.outcome }}" != "success" ]; then
+            echo "zed-agent-pets publish failed."
+            failed=true
+          fi
+
+          if [ "${{ steps.publish_warp_agent_pets.outcome }}" != "success" ]; then
+            echo "warp-agent-pets publish failed."
             failed=true
           fi
 

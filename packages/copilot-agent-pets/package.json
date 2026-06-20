@@ -1,0 +1,30 @@
+{
+  "name": "copilot-agent-pets",
+  "version": "1.0.4",
+  "private": false,
+  "description": "GitHub Copilot CLI hooks, MCP, and /pet skill for Agent Pets.",
+  "license": "MIT",
+  "homepage": "https://github.com/ifBars/agent-pets#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ifBars/agent-pets.git",
+    "directory": "packages/copilot-agent-pets"
+  },
+  "bugs": {
+    "url": "https://github.com/ifBars/agent-pets/issues"
+  },
+  "keywords": [
+    "agent-pets",
+    "github-copilot",
+    "copilot-cli",
+    "mcp",
+    "desktop-pets"
+  ],
+  "files": [
+    "README.md",
+    "skills"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

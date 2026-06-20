@@ -1,0 +1,29 @@
+{
+  "name": "aider-agent-pets",
+  "version": "1.0.4",
+  "private": false,
+  "description": "Aider notification integration for Agent Pets.",
+  "license": "MIT",
+  "homepage": "https://github.com/ifBars/agent-pets#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ifBars/agent-pets.git",
+    "directory": "packages/aider-agent-pets"
+  },
+  "bugs": {
+    "url": "https://github.com/ifBars/agent-pets/issues"
+  },
+  "author": "ifBars",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "README.md"
+  ],
+  "keywords": [
+    "aider",
+    "agent-pets",
+    "desktop-pets",
+    "notifications"
+  ]
+}

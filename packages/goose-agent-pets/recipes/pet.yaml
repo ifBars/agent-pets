@@ -1,0 +1,9 @@
+title: Agent Pets
+description: Launch and update the local Agent Pets desktop companion.
+instructions: |
+  Use the agent-pets extension to launch Agent Pets and update high-level status.
+
+  Call launch_agent_pets first. If the user provided a pet id, pass it as the pet argument.
+  Then call update_agent_pets_status with a short privacy-safe detail.
+
+  Do not include prompt text, source code, secrets, or long transcript content in status details.

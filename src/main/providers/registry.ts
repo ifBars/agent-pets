@@ -18,9 +18,30 @@ export const PROVIDER_METADATA: ProviderMetadata[] = [
   {
     id: "claude-code",
     label: "Claude Code",
+    modes: ["bridge-file", "jsonl"],
+    defaultRefreshMs: 8000,
+    setupHint: "Reads privacy-safe Claude Code hook status, with local JSONL metadata fallback only.",
+  },
+  {
+    id: "gemini-cli",
+    label: "Gemini CLI",
     modes: ["jsonl"],
     defaultRefreshMs: 8000,
-    setupHint: "Reads local Claude Code project transcripts without exposing prompt or response text.",
+    setupHint: "Reads local Gemini CLI session history from GEMINI_DIR or ~/.gemini without exposing prompt or response text.",
+  },
+  {
+    id: "aider",
+    label: "Aider",
+    modes: ["bridge-file", "jsonl"],
+    defaultRefreshMs: 8000,
+    setupHint: "Reads a privacy-safe Aider notification status file, with chat-history mtime fallback only.",
+  },
+  {
+    id: "copilot-cli",
+    label: "GitHub Copilot CLI",
+    modes: ["bridge-file", "jsonl"],
+    defaultRefreshMs: 8000,
+    setupHint: "Reads privacy-safe Copilot CLI hook status, with session-state mtime fallback only.",
   },
   {
     id: "t3code",

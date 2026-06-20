@@ -5,6 +5,30 @@ const path = require("node:path");
 const { readClaudeCodeActivity } = require("../build/src/main/providers/claude-code.js");
 
 describe("claude code provider", () => {
+  test("reads privacy-safe claude hook status", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "agent-pets-claude-"));
+    const statusFile = path.join(root, "claude-code.json");
+    await fs.writeFile(
+      statusFile,
+      JSON.stringify({
+        state: "review",
+        title: "Claude Code",
+        detail: "Ready for review",
+        updatedAt: "2026-05-18T10:00:00.000Z",
+      }),
+    );
+
+    const activity = await readClaudeCodeActivity({
+      bridgeFile: statusFile,
+      now: new Date("2026-05-18T10:01:00.000Z"),
+    });
+
+    expect(activity.source).toBe("claude-code");
+    expect(activity.statusFile).toBe(statusFile);
+    expect(activity.active.title).toBe("Claude Code");
+    expect(activity.active.state).toBe("review");
+  });
+
   test("normalizes recent claude jsonl sessions without exposing message text", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "agent-pets-claude-"));
     const projectDir = path.join(root, "projects", "C--repo");

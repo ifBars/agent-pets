@@ -1,0 +1,31 @@
+{
+  "name": "gemini-agent-pets",
+  "version": "1.0.4",
+  "private": false,
+  "description": "Gemini CLI slash command integration for Agent Pets.",
+  "license": "MIT",
+  "homepage": "https://github.com/ifBars/agent-pets#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ifBars/agent-pets.git",
+    "directory": "packages/gemini-agent-pets"
+  },
+  "bugs": {
+    "url": "https://github.com/ifBars/agent-pets/issues"
+  },
+  "author": "ifBars",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "commands",
+    "gemini-extension.json",
+    "README.md"
+  ],
+  "keywords": [
+    "gemini-cli",
+    "agent-pets",
+    "desktop-pets",
+    "slash-command"
+  ]
+}

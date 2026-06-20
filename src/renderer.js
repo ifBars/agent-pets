@@ -343,7 +343,10 @@ async function loadProviders() {
   const fallback = [
     { id: "codex", label: "Codex", modes: ["jsonl"], defaultRefreshMs: IDLE_REFRESH_MS },
     { id: "opencode", label: "OpenCode", modes: ["bridge-file", "command"], defaultRefreshMs: IDLE_REFRESH_MS },
-    { id: "claude-code", label: "Claude Code", modes: ["jsonl"], defaultRefreshMs: IDLE_REFRESH_MS },
+    { id: "claude-code", label: "Claude Code", modes: ["bridge-file", "jsonl"], defaultRefreshMs: IDLE_REFRESH_MS },
+    { id: "gemini-cli", label: "Gemini CLI", modes: ["jsonl"], defaultRefreshMs: IDLE_REFRESH_MS },
+    { id: "aider", label: "Aider", modes: ["bridge-file", "jsonl"], defaultRefreshMs: IDLE_REFRESH_MS },
+    { id: "copilot-cli", label: "GitHub Copilot CLI", modes: ["bridge-file", "jsonl"], defaultRefreshMs: IDLE_REFRESH_MS },
     { id: "t3code", label: "T3Code", modes: ["http", "command", "jsonl"], defaultRefreshMs: IDLE_REFRESH_MS },
     { id: "json-status", label: "Status file", modes: ["bridge-file"], requiresStatusFile: true, defaultRefreshMs: IDLE_REFRESH_MS },
     { id: "desktop", label: "Desktop", modes: ["manual"], defaultRefreshMs: DESKTOP_REFRESH_MS },

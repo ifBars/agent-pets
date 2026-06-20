@@ -1,0 +1,29 @@
+{
+  "name": "warp-agent-pets",
+  "version": "1.0.4",
+  "private": false,
+  "description": "Warp MCP integration for Agent Pets.",
+  "license": "MIT",
+  "homepage": "https://github.com/ifBars/agent-pets#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ifBars/agent-pets.git",
+    "directory": "packages/warp-agent-pets"
+  },
+  "bugs": {
+    "url": "https://github.com/ifBars/agent-pets/issues"
+  },
+  "keywords": [
+    "agent-pets",
+    "warp",
+    "warp-drive",
+    "terminal-agent",
+    "mcp"
+  ],
+  "files": [
+    "README.md"
+  ]
+}
